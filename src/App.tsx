@@ -2,29 +2,25 @@
 import "./App.css";
 import LoginButton from "./components/LoginButton";
 import Dashboard from "./components/Dashboard";
-import { Web3AuthProvider } from "./context/Web3AuthContext";
+import { Web3AuthProvider,useWeb3Auth } from "./context/Web3AuthContext";
+import WalletScreen from "./components/WalletScreen";
+import { useEffect, useState } from "react";
 
 function App() {
   return (
     <Web3AuthProvider>
-      <div className="container">
-        <h1 className="text-3xl font-bold text-orange-500">
-          <a target="_blank" href="https://web3auth.io/docs/sdk/pnp/web/modal" rel="noreferrer">
-            Web3Auth
-          </a>
-          & Steph's React App
-        </h1>
-
-        <div className="grid">
-          <LoginButton />
-          <Dashboard />
-        </div>
-
-        <footer className="footer">
-          Steph's Footer
-        </footer>
-      </div>
+      <MainContent />
     </Web3AuthProvider>
+  );
+}
+
+function MainContent() {
+  const { loggedIn } = useWeb3Auth(); // Get login state from context
+
+  return (
+    <div className="container flex flex-col items-center justify-center min-h-screen bg-[#141414] text-white">
+      {loggedIn ? <WalletScreen /> : <LoginButton />}
+    </div>
   );
 }
 
