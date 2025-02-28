@@ -51,3 +51,5 @@ Thumbs.db
 # 📦 Package Manager Files  
 pnpm-lock.yaml  
 yarn.lock  
+
+devSSL/
