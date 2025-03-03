@@ -2,6 +2,18 @@
 import type { IProvider } from "@web3auth/base";
 import { ethers } from "ethers";
 
+// NEYXT & NFT Contracts
+const NEYXT_CONTRACT_ADDRESS = "0xYourNEYXTTokenAddress";
+const NFT_CONTRACT_ADDRESS = "0xYourNFTContractAddress";
+
+// ERC20 ABI for balance
+const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
+const ERC721_ABI = [
+  "function balanceOf(address owner) view returns (uint256)",
+  "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
+  "function tokenURI(uint256 tokenId) view returns (string)",
+];
+
 const getChainId = async (provider: IProvider): Promise<any> => {
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
@@ -93,4 +105,71 @@ const signMessage = async (provider: IProvider): Promise<any> => {
   }
 }
 
-export default {getChainId, getAccounts, getBalance, sendTransaction, signMessage};
+// ✅ Get Native Token Balance (ETH, POL, etc.)
+const getNetworkBalance = async (provider: IProvider): Promise<string> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const address = await getAccounts(provider);
+    const balance = await ethersProvider.getBalance(address);
+    return ethers.formatEther(balance);
+  } catch (error) {
+    return `Error: ${error}`;
+  }
+};
+
+// ✅ Get NEYXT Token Balance (ERC-20)
+const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    const address = await signer.getAddress();
+
+    const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
+    const balance = await contract.balanceOf(address);
+    return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
+  } catch (error) {
+    return `Error: ${error}`;
+  }
+};
+
+// ✅ Get NFTs (ERC-721)
+const getNFTs = async (provider: IProvider): Promise<any[]> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    const address = await signer.getAddress();
+
+    const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
+    const nftCount = await contract.balanceOf(address);
+
+    if (nftCount.toString() === "0") return [];
+
+    const nftData = [];
+    for (let i = 0; i < nftCount; i++) {
+      const tokenId = await contract.tokenOfOwnerByIndex(address, i);
+      const tokenURI = await contract.tokenURI(tokenId);
+      
+      nftData.push({
+        tokenId: tokenId.toString(),
+        metadata: tokenURI, // You may need to fetch metadata from the URI
+      });
+    }
+
+    return nftData;
+  } catch (error) {
+    return [`Error: ${error}`];
+  }
+};
+
+export default {
+  getChainId,
+  getAccounts,
+  getBalance,
+  getNetworkBalance,
+  getNEYXTBalance,
+  getNFTs,
+  sendTransaction,
+  signMessage,
+};
+
+// export default {getChainId, getAccounts, getBalance, sendTransaction, signMessage};
