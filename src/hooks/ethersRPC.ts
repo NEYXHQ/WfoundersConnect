@@ -132,7 +132,7 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
   }
 };
 
-// ✅ Get NFTs (ERC-721)
+// for now only fetches in NFT per address
 const getNFTs = async (provider: IProvider): Promise<any[]> => {
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
@@ -140,24 +140,25 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     const address = await signer.getAddress();
 
     const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
-    const nftCount = await contract.balanceOf(address);
+    const balance = await contract.balanceOf(address);
 
-    if (nftCount.toString() === "0") return [];
+    if (balance.toString() === "0") return [];
 
-    const nftData = [];
-    for (let i = 0; i < nftCount; i++) {
-      const tokenId = await contract.tokenOfOwnerByIndex(address, i);
-      const tokenURI = await contract.tokenURI(tokenId);
-      
-      nftData.push({
-        tokenId: tokenId.toString(),
-        metadata: tokenURI, // You may need to fetch metadata from the URI
-      });
-    }
+    const nfts = [];
+    const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
+    if (!response.ok) throw new Error("No NFT found for this wallet.");
 
-    return nftData;
+    const metadata = await response.json();
+
+    nfts.push({
+      metadata,
+    });
+
+
+    return nfts;
   } catch (error) {
-    return [`Error: ${error}`];
+    console.error("Error fetching NFTs:", error);
+    return [];
   }
 };
 
