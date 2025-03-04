@@ -3,8 +3,8 @@ import type { IProvider } from "@web3auth/base";
 import { ethers } from "ethers";
 
 // NEYXT & NFT Contracts
-const NEYXT_CONTRACT_ADDRESS = "0xYourNEYXTTokenAddress";
-const NFT_CONTRACT_ADDRESS = "0xYourNFTContractAddress";
+const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
+const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
 
 // ERC20 ABI for balance
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];

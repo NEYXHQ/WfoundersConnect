@@ -1,6 +1,7 @@
 import { useState } from "react";
 import BalanceCard from "./BalanceCard";
 import TokenList from "./TokenList";
+import NFTList from "./NFTList";
 import BottomNav from "./BottomNav";
 import { useWeb3Auth } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
@@ -8,7 +9,8 @@ import { LuUserRoundCheck } from "react-icons/lu";
 const WalletScreen = () => {
   const { loggedIn, logout, getUserInfo, userInfo } = useWeb3Auth(); // ✅ Use logout from context
   const { profileImage, verifierId } = userInfo;
-  const [menuOpen, setMenuOpen] = useState(false); // ✅ Toggle state for menu
+  const [menuOpen, setMenuOpen] = useState(false); 
+  const [showNFTs, setShowNFTs] = useState(false); 
 
   if (!loggedIn) return null; // Hide if not logged in
   
@@ -75,16 +77,22 @@ const WalletScreen = () => {
 
         {/* Toggle Buttons */}
         <div className="flex justify-between my-4">
-          <button className="flex-1 bg-blue-600 text-white py-2 rounded-lg font-semibold">
+        <button 
+            onClick={() => setShowNFTs(false)} 
+            className={`flex-1 py-2 rounded-lg font-semibold ml-2 ${!showNFTs ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-400"}`}
+          >
             Tokens
           </button>
-          <button className="flex-1 bg-gray-700 text-gray-400 py-2 rounded-lg font-semibold ml-2">
+          <button 
+            onClick={() => setShowNFTs(true)} 
+            className={`flex-1 py-2 rounded-lg font-semibold ml-2 ${showNFTs ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-400"}`}
+          >
             NFT
           </button>
         </div>
 
-        {/* Token List */}
-        <TokenList />
+        {/* Show Tokens or NFTs based on selection */}
+        {showNFTs ? <NFTList /> : <TokenList />}
 
         {/* Bottom Navigation */}
         <BottomNav />
