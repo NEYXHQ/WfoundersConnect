@@ -6,7 +6,8 @@ import { FaCopy, FaCheck } from "react-icons/fa";
 const BalanceCard = () => {
   const { provider } = useWeb3Auth();
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
-  const [copied, setCopied] = useState<boolean>(false); // ✅ Track copy state
+  const [copied, setCopied] = useState<boolean>(false); 
+  const [prices, setPrices] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
     if (!provider) return;
@@ -17,7 +18,70 @@ const BalanceCard = () => {
     };
 
     fetchAddress();
+
+    // ✅ Fetch USD prices
+    // const fetchPrices = async () => {
+    //   try {
+    //     const response = await fetch(
+    //       "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0?include_market_cap=false&include_24hr_vol=false"
+    //     );
+    
+    //     if (!response.ok) {
+    //       throw new Error(`HTTP error! Status: ${response.status}`);
+    //     }
+    
+    //     const data = await response.json();
+    //     if (data) {
+    //       const priceMap: { [key: string]: number } = {};
+    //       for (const token in data.data) {
+    //         priceMap[token] = parseFloat(data.data[token].price);
+    //       }
+    //       setPrices(priceMap);
+    //       console.log(`price map : ${response}`);
+    //     }
+    
+    //     return data;
+    //   } catch (error) {
+    //     console.error("❌ Error fetching prices:", error);
+    //     return null;
+    //   }
+    // };
+
+
+    fetchPrices();
+    
   }, [provider]);
+
+  const fetchPrices = async () => {
+    try {
+      const response = await fetch(
+        "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0?include_market_cap=false&include_24hr_vol=false"
+      );
+  
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+  
+      const data = await response.json();
+      console.log("🟢 Price API Response:", data.data.attributes.token_prices); // ✅ Log the full JSON response
+      if (data) {
+        setPrices(data.data.attributes.token_prices);
+      }
+  
+      return data;
+    } catch (error) {
+      console.error("❌ Error fetching prices:", error);
+      return null;
+    }
+  };
+
+  const getTotalBalanceUSD = () => {
+    let total = 0;
+    for (const key in prices) {
+      total += prices[key];
+    }
+    return total;
+  };
 
   // ✅ Format Address (e.g., 0x1234...5678)
   const formattedAddress = walletAddress
@@ -55,7 +119,7 @@ const BalanceCard = () => {
       )}
 
       {/* ✅ Balance (Static for now) */}
-      <div className="text-3xl font-bold mt-2">$325.58 <span className="text-lg">USD</span></div>
+      <div className="text-3xl font-bold mt-2">${getTotalBalanceUSD()} <span className="text-lg">USD</span></div>
 
       {/* ✅ Actions */}
       <div className="flex justify-between mt-4">
