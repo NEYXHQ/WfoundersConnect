@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import BalanceCard from "./BalanceCard";
 import TokenList from "./TokenList";
 import NFTList from "./NFTList";
@@ -13,6 +13,7 @@ const WalletScreen = () => {
   const { loggedIn, logout, userInfo, provider } = useWeb3Auth(); // ✅ Use logout from context
   const { profileImage, verifierId } = userInfo;
   const [menuOpen, setMenuOpen] = useState(false); 
+  const menuRef = useRef<HTMLDivElement | null>(null); // 🔹 Reference for the menu
   const [showNFTs, setShowNFTs] = useState(false); 
 
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
@@ -58,6 +59,17 @@ const WalletScreen = () => {
     fetchBalancesAndPrices();
   }, [provider]);
 
+  // 🔹 Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   if (!loggedIn) return null; // Hide if not logged in
   
   return (
@@ -97,7 +109,7 @@ const WalletScreen = () => {
 
             {/* Logout Menu */}
             {menuOpen && (
-              <div className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
+              <div ref={menuRef} className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
                 <button
                   onClick={logout}
                   className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg"
