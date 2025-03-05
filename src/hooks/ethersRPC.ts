@@ -19,6 +19,7 @@ const getChainId = async (provider: IProvider): Promise<any> => {
     const ethersProvider = new ethers.BrowserProvider(provider);
     // Get the connected Chain's ID
     const networkDetails = await ethersProvider.getNetwork();
+    console.log(`Net Details : \n ${networkDetails}`);
     return networkDetails.chainId.toString();
   } catch (error) {
     return error;
@@ -121,11 +122,11 @@ const getNetworkBalance = async (provider: IProvider): Promise<string> => {
 const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
-    const signer = await ethersProvider.getSigner();
-    const address = await signer.getAddress();
+    const address = await getAccounts(provider);
 
     const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
+    console.log(`NEYXT Balance in RPC : ${balance}`);
     return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
   } catch (error) {
     return `Error: ${error}`;

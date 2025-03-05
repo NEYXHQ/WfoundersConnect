@@ -1,6 +1,3 @@
-// src/hooks/useBlockchain.ts
-
-import { useState } from "react";
 import RPC from "./ethersRPC";
 import { IProvider } from "@web3auth/base";
 

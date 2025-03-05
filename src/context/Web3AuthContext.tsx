@@ -51,14 +51,12 @@ export const Web3AuthProvider = ({ children }: { children: React.ReactNode }) =>
   useEffect(() => {
     const init = async () => {
       try {
-        console.log(`In useEffect`);
         await web3auth.initModal();
         setProvider(web3auth.provider);
         if (web3auth.connected) {
           const user = await getUserInfo(); // ✅ Fetch user info immediately after login
           
           if (user) {
-            console.log(`user info : ${user.profileImage}`);
             setLoggedIn(true);
           }
         }
@@ -97,16 +95,15 @@ export const Web3AuthProvider = ({ children }: { children: React.ReactNode }) =>
   };
 
   const getUserInfo = async () => {
-    console.log("here");
     const user = await web3auth.getUserInfo();
     if (user) {
-      console.log(`setting user profile with ${user.profileImage}`);
+      // console.log(`setting user profile with ${user.profileImage}`);
       setUserInfo({
         profileImage: user.profileImage || null,
         verifierId: user.verifierId || null,
       });
     }
-    console.log(`after set ${user.profileImage}`);
+
     return user;
   };
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import BalanceCard from "./BalanceCard";
 import TokenList from "./TokenList";
 import NFTList from "./NFTList";
@@ -6,11 +6,57 @@ import BottomNav from "./BottomNav";
 import { useWeb3Auth } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
 
+import RPC from "../hooks/ethersRPC";
+
+
 const WalletScreen = () => {
-  const { loggedIn, logout, getUserInfo, userInfo } = useWeb3Auth(); // ✅ Use logout from context
+  const { loggedIn, logout, userInfo, provider } = useWeb3Auth(); // ✅ Use logout from context
   const { profileImage, verifierId } = userInfo;
   const [menuOpen, setMenuOpen] = useState(false); 
   const [showNFTs, setShowNFTs] = useState(false); 
+
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [neyxtBalance, setNeyxtBalance] = useState<number>(0);
+  const [networkBalance, setNetworkBalance] = useState<number>(0);
+  const [prices, setPrices] = useState<{ [key: string]: string }>({});
+
+  useEffect(() => {
+    const fetchBalancesAndPrices = async () => {
+      if (!provider) return;
+      
+      try {
+        // Fetch Address
+        const address = await RPC.getAccounts(provider);
+        setWalletAddress(address);
+
+        // Fetch balances
+        const neyxt = await RPC.getNEYXTBalance(provider);
+        const network = await RPC.getNetworkBalance(provider);
+        setNeyxtBalance(parseFloat(neyxt));
+        setNetworkBalance(parseFloat(network));
+
+        // Fetch token prices
+        const response = await fetch(
+          "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0?include_market_cap=false&include_24hr_vol=false"
+        );
+        const data = await response.json();
+        setPrices(data.data.attributes.token_prices);
+
+        console.log(`In WalletScreen useEffect`);
+        console.log(`   - Address       ${walletAddress}`);
+        console.log(`   - Neyxt Balance ${neyxtBalance ?? "--" }`);
+        console.log(`   - NEtwork Balan ${networkBalance}`);
+        for (const key in prices) {
+          console.log(`   - prices ${prices[key]} / key ${key}`);
+        }
+        console.log(`   - prices2 ${prices["0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"]}`);
+      } catch (error) {
+        console.error("Error fetching balances/prices:", error);
+      }
+    };
+
+    fetchBalancesAndPrices();
+  }, [provider]);
 
   if (!loggedIn) return null; // Hide if not logged in
   
@@ -73,7 +119,13 @@ const WalletScreen = () => {
         </div>
 
         {/* Balance & Actions */}
-        <BalanceCard />
+        {/* Balance Card */}
+        <BalanceCard 
+          walletAddress={walletAddress?? ""}
+          neyxtBalance={neyxtBalance} 
+          networkBalance={networkBalance} 
+          prices={prices} 
+        />
 
         {/* Toggle Buttons */}
         <div className="flex justify-between my-4">
@@ -92,7 +144,7 @@ const WalletScreen = () => {
         </div>
 
         {/* Show Tokens or NFTs based on selection */}
-        {showNFTs ? <NFTList /> : <TokenList />}
+        {showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance}/>}
 
         {/* Bottom Navigation */}
         <BottomNav />

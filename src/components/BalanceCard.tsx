@@ -1,87 +1,33 @@
-import { useWeb3Auth } from "../context/Web3AuthContext";
-import ethersRPC from "../hooks/ethersRPC";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { FaCopy, FaCheck } from "react-icons/fa";
 
-const BalanceCard = () => {
-  const { provider } = useWeb3Auth();
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+interface BalanceCardProps {
+  walletAddress: string;
+  neyxtBalance: number;
+  networkBalance: number;
+  prices: { [key: string]: string };
+}
+
+const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, networkBalance, prices }) => {
+
   const [copied, setCopied] = useState<boolean>(false); 
-  const [prices, setPrices] = useState<{ [key: string]: number }>({});
-
-  useEffect(() => {
-    if (!provider) return;
-
-    const fetchAddress = async () => {
-      const address = await ethersRPC.getAccounts(provider);
-      setWalletAddress(address);
-    };
-
-    fetchAddress();
-
-    // ✅ Fetch USD prices
-    // const fetchPrices = async () => {
-    //   try {
-    //     const response = await fetch(
-    //       "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0?include_market_cap=false&include_24hr_vol=false"
-    //     );
-    
-    //     if (!response.ok) {
-    //       throw new Error(`HTTP error! Status: ${response.status}`);
-    //     }
-    
-    //     const data = await response.json();
-    //     if (data) {
-    //       const priceMap: { [key: string]: number } = {};
-    //       for (const token in data.data) {
-    //         priceMap[token] = parseFloat(data.data[token].price);
-    //       }
-    //       setPrices(priceMap);
-    //       console.log(`price map : ${response}`);
-    //     }
-    
-    //     return data;
-    //   } catch (error) {
-    //     console.error("❌ Error fetching prices:", error);
-    //     return null;
-    //   }
-    // };
-
-
-    fetchPrices();
-    
-  }, [provider]);
-
-  const fetchPrices = async () => {
-    try {
-      const response = await fetch(
-        "https://api.geckoterminal.com/api/v2/simple/networks/eth/token_price/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0?include_market_cap=false&include_24hr_vol=false"
-      );
   
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-  
-      const data = await response.json();
-      console.log("🟢 Price API Response:", data.data.attributes.token_prices); // ✅ Log the full JSON response
-      if (data) {
-        setPrices(data.data.attributes.token_prices);
-      }
-  
-      return data;
-    } catch (error) {
-      console.error("❌ Error fetching prices:", error);
-      return null;
-    }
-  };
-
   const getTotalBalanceUSD = () => {
-    let total = 0;
-    for (const key in prices) {
-      total += prices[key];
-    }
-    return total;
+    const neyxtPrice = parseFloat(prices["0xYourNEYXTTokenAddress"] || "0");
+    const networkPrice = parseFloat(prices["0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"] || "0");
+    const totalUSD = (neyxtBalance * neyxtPrice) + (networkBalance * networkPrice);
+    return totalUSD.toFixed(2);
   };
+
+  // const getTotalBalanceUSD = () => {
+    
+  //   let total = 0;
+  //   for (const key in prices) {
+  //     total += prices[key];
+  //     console.log(` prices ${prices[key]} / key ${key}`);
+  //   }
+  //   return total;
+  // };
 
   // ✅ Format Address (e.g., 0x1234...5678)
   const formattedAddress = walletAddress
