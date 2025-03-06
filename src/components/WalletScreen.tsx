@@ -112,7 +112,7 @@ const WalletScreen = () => {
               <div ref={menuRef} className="absolute right-0 mt-2 w-40 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-50">
                 <button
                   onClick={logout}
-                  className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 rounded-lg"
+                  className="block w-full text-left px-2 py-2 text-gray-300 hover:bg-gray-700 rounded-lg"
                 >
                   Logout
                 </button>
