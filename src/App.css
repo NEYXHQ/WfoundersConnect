@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
-.container {
+/* .container {
 	width: 80%;
 	margin: auto;
 	padding: 0 2rem;
-}
+} */
 
 .main {
 	min-height: 100vh;
@@ -28,7 +28,7 @@
 	text-decoration: none;
 }
 
-.grid {
+/* .grid {
 	display: flex;
 	align-items: center;
 	flex-direction: column;
@@ -45,14 +45,14 @@
 	border-radius: 10px;
 	transition: color 0.15s ease, border-color 0.15s ease;
 	width: 100%;
-}
+} */
 
-.card:hover,
+/* .card:hover,
 .card:focus,
 .card:active {
 	cursor: pointer;
 	background-color: #f1f1f1;
-}
+} */
 
 .footer {
 	display: flex;
@@ -76,11 +76,11 @@
 	margin-left: 0.5rem;
 }
 
-@media (max-width: 1200px) {
+/* @media (max-width: 1200px) {
 	.container {
 		width: 90%;
 	}
-}
+} */
 
 .flex-container {
 	display: flex;

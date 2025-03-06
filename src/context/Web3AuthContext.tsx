@@ -8,12 +8,23 @@ import { getDefaultExternalAdapters } from "@web3auth/default-evm-adapter";
 
 const clientId = "BPYjbc75TRunCKQfGPUQ3794T-KzcR1toGj7mPxw4B4L6c4MxLZ_JMQoMOIbKlFtADx7xUl9TNR7ZMRvMqTe48M";
 
+// export const chainConfig = {
+//   chainNamespace: CHAIN_NAMESPACES.EIP155,
+//   chainId: "0x89", // Polygon Mainnet
+//   rpcTarget: "https://rpc.ankr.com/polygon",
+//   displayName: "Polygon Mainnet",
+//   blockExplorerUrl: "https://polygonscan.com",
+//   ticker: "POL",
+//   tickerName: "Polygon Ecosystem Token",
+//   logo: "https://cryptologos.cc/logos/polygon-matic-logo.png",
+// };
+
 export const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: "0x89", // Polygon Mainnet
-  rpcTarget: "https://rpc.ankr.com/polygon",
-  displayName: "Polygon Mainnet",
-  blockExplorerUrl: "https://polygonscan.com",
+  chainId: "0x13882", // Polygon Mainnet
+  rpcTarget: "https://rpc.ankr.com/polygon_amoy",
+  displayName: "Polygon Amoy Testnet",
+  blockExplorerUrl: "https://amoy.polygonscan.com",
   ticker: "POL",
   tickerName: "Polygon Ecosystem Token",
   logo: "https://cryptologos.cc/logos/polygon-matic-logo.png",

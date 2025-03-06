@@ -2,9 +2,13 @@
 import type { IProvider } from "@web3auth/base";
 import { ethers } from "ethers";
 
-// NEYXT & NFT Contracts
-const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
-const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
+// // NEYXT & NFT Contracts - PROD
+// const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
+// const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
+
+// NEYXT & NFT Contracts - DEV
+const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
+const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
 
 // ERC20 ABI for balance
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
@@ -59,20 +63,18 @@ const getBalance = async (provider: IProvider): Promise<string> => {
   }
 }
 
-const sendTransaction = async (provider: IProvider): Promise<any> => {
+const sendTransaction = async (provider: IProvider, recipient: string, amount: string): Promise<any> => {
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
 
-    const destination = "0x40e1c367Eca34250cAF1bc8330E9EddfD403fC56";
-
-    const amount = ethers.parseEther("0.001");
+    const parsedAmount = ethers.parseEther(amount);
     const fees = await ethersProvider.getFeeData()
 
     // Submit transaction to the blockchain
     const tx = await signer.sendTransaction({
-      to: destination,
-      value: amount,
+      to: recipient,
+      value: parsedAmount,
       maxPriorityFeePerGas: fees.maxPriorityFeePerGas, // Max priority fee per gas
       maxFeePerGas: fees.maxFeePerGas, // Max fee per gas
     });
@@ -85,6 +87,22 @@ const sendTransaction = async (provider: IProvider): Promise<any> => {
     return error as string;
   }
 }
+
+const sendToken = async (provider: IProvider, recipient: string, amount: string): Promise<any> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
+
+    const decimals = 18; // Adjust based on NEYXT token decimals
+    const parsedAmount = ethers.parseUnits(amount, decimals);
+    
+    const tx = await contract.transfer(recipient, parsedAmount);
+    return await tx.wait();
+  } catch (error) {
+    throw new Error(error as string);
+  }
+};
 
 const signMessage = async (provider: IProvider): Promise<any> => {
   try {
@@ -146,7 +164,12 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     if (balance.toString() === "0") return [];
 
     const nfts = [];
-    const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
+    // // PROD
+    // const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
+
+    // DEV
+    const response = await fetch(`https://wfounders.club/api/metadata/amoy/${address}`);
+
     if (!response.ok) throw new Error("No NFT found for this wallet.");
 
     const metadata = await response.json();
@@ -171,6 +194,7 @@ export default {
   getNEYXTBalance,
   getNFTs,
   sendTransaction,
+  sendToken,
   signMessage,
 };
 

@@ -3,7 +3,7 @@ import BalanceCard from "./BalanceCard";
 import TokenList from "./TokenList";
 import NFTList from "./NFTList";
 import BottomNav from "./BottomNav";
-import { useWeb3Auth } from "../context/Web3AuthContext";
+import { useWeb3Auth, chainConfig } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
 
 import RPC from "../hooks/ethersRPC";
@@ -73,8 +73,8 @@ const WalletScreen = () => {
   if (!loggedIn) return null; // Hide if not logged in
   
   return (
-    <div className="flex flex-col items-center min-h-screen bg-gray-900 p-4 text-white">
-      <div className="w-full max-w-md bg-gray-800 p-4 rounded-lg shadow-lg">
+    <div className="flex flex-col items-center min-h-screen w-full bg-[#141414] p-0 text-white">
+  <div className="w-full max-w-[500px] min-w-[250] bg-gray-800 p-4 rounded-lg shadow-lg">
         
         {/* Logo & Profile */}
         <div className="flex justify-between items-center mb-4 relative">
@@ -130,6 +130,10 @@ const WalletScreen = () => {
           </div>
         </div>
 
+        <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
+          {chainConfig.displayName}
+        </div>
+
         {/* Balance & Actions */}
         {/* Balance Card */}
         <BalanceCard 
@@ -160,7 +164,10 @@ const WalletScreen = () => {
 
         {/* Bottom Navigation */}
         <BottomNav />
+
       </div>
+
+      
     </div>
   );
 };

@@ -139,8 +139,8 @@ function App() {
       return;
     }
     uiConsole("Sending Transaction...");
-    const transactionReceipt = await RPC.sendTransaction(provider);
-    uiConsole(transactionReceipt);
+    // const transactionReceipt = await RPC.sendTransaction(provider);
+    // uiConsole(transactionReceipt);
   };
   // IMP END - Blockchain Calls
 

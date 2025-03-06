@@ -22,7 +22,7 @@ export const useBlockchain = (provider: IProvider | null) => {
 
   const sendTransaction = async () => {
     if (!provider) return "Provider not initialized";
-    return await RPC.sendTransaction(provider);
+    // return await RPC.sendTransaction(provider);
   };
 
   return { getAccounts, getBalance, signMessage, sendTransaction };
