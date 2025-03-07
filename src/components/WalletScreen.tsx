@@ -12,9 +12,9 @@ import RPC from "../hooks/ethersRPC";
 const WalletScreen = () => {
   const { loggedIn, logout, userInfo, provider } = useWeb3Auth(); // ✅ Use logout from context
   const { profileImage, verifierId } = userInfo;
-  const [menuOpen, setMenuOpen] = useState(false); 
+  const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null); // 🔹 Reference for the menu
-  const [showNFTs, setShowNFTs] = useState(false); 
+  const [showNFTs, setShowNFTs] = useState(false);
 
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [neyxtBalance, setNeyxtBalance] = useState<number>(0);
@@ -24,7 +24,7 @@ const WalletScreen = () => {
   useEffect(() => {
     const fetchBalancesAndPrices = async () => {
       if (!provider) return;
-      
+
       try {
         // Fetch Address
         const address = await RPC.getAccounts(provider);
@@ -45,7 +45,7 @@ const WalletScreen = () => {
 
         console.log(`In WalletScreen useEffect`);
         console.log(`   - Address       ${walletAddress}`);
-        console.log(`   - Neyxt Balance ${neyxtBalance ?? "--" }`);
+        console.log(`   - Neyxt Balance ${neyxtBalance ?? "--"}`);
         console.log(`   - NEtwork Balan ${networkBalance}`);
         for (const key in prices) {
           console.log(`   - prices ${prices[key]} / key ${key}`);
@@ -71,11 +71,11 @@ const WalletScreen = () => {
   }, []);
 
   if (!loggedIn) return null; // Hide if not logged in
-  
+
   return (
-    <div className="flex flex-col items-center min-h-screen w-full bg-[#141414] p-0 text-white">
-  <div className="w-full max-w-[500px] min-w-[250] bg-gray-800 p-4 rounded-lg shadow-lg">
-        
+    <div className="flex flex-col items-center min-h-screen w-full bg-[#141414] p-0 text-white ">
+      <div className="w-full max-w-[500px] min-w-[250] bg-gray-800 p-4 rounded-lg shadow-lg">
+
         {/* Logo & Profile */}
         <div className="flex justify-between items-center mb-4 relative">
           <div className="text-2xl font-bold">WF</div>
@@ -136,23 +136,23 @@ const WalletScreen = () => {
 
         {/* Balance & Actions */}
         {/* Balance Card */}
-        <BalanceCard 
-          walletAddress={walletAddress?? ""}
-          neyxtBalance={neyxtBalance} 
-          networkBalance={networkBalance} 
-          prices={prices} 
+        <BalanceCard
+          walletAddress={walletAddress ?? ""}
+          neyxtBalance={neyxtBalance}
+          networkBalance={networkBalance}
+          prices={prices}
         />
 
         {/* Toggle Buttons */}
         <div className="flex justify-between my-4">
-        <button 
-            onClick={() => setShowNFTs(false)} 
+          <button
+            onClick={() => setShowNFTs(false)}
             className={`flex-1 py-2 rounded-lg font-semibold ml-2 ${!showNFTs ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-400"}`}
           >
             Tokens
           </button>
-          <button 
-            onClick={() => setShowNFTs(true)} 
+          <button
+            onClick={() => setShowNFTs(true)}
             className={`flex-1 py-2 rounded-lg font-semibold ml-2 ${showNFTs ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-400"}`}
           >
             NFT
@@ -160,14 +160,14 @@ const WalletScreen = () => {
         </div>
 
         {/* Show Tokens or NFTs based on selection */}
-        {showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance}/>}
+        {showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance} />}
 
         {/* Bottom Navigation */}
         <BottomNav />
 
       </div>
 
-      
+
     </div>
   );
 };
