@@ -1,15 +1,17 @@
 // src/App.tsx
 import "./App.css";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { Web3AuthProvider, useWeb3Auth } from "./context/Web3AuthContext";
 import LoginButton from "./components/LoginButton";
-import Dashboard from "./components/Dashboard";
-import { Web3AuthProvider,useWeb3Auth, chainConfig } from "./context/Web3AuthContext";
 import WalletScreen from "./components/WalletScreen";
-import { useEffect, useState } from "react";
+import OnBoardingMint from "./components/OnBoardingMint"; // ✅ Import onboarding screen
 
 function App() {
   return (
     <Web3AuthProvider>
-      <MainContent />
+      <Router>
+        <MainContent />
+      </Router>
     </Web3AuthProvider>
   );
 }
@@ -19,9 +21,11 @@ function MainContent() {
 
   return (
     <div className="container flex flex-col items-center justify-center min-h-screen bg-[#141414] text-white">
-      {loggedIn ? <WalletScreen /> : <LoginButton />}
+      <Routes>
+        <Route path="/" element={loggedIn ? <WalletScreen /> : <LoginButton />} />
+        <Route path="/onboarding" element={<OnBoardingMint />} /> {/* ✅ New Route */}
+      </Routes>
     </div>
-    
   );
 }
 

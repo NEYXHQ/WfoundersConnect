@@ -21,6 +21,8 @@ const WalletScreen = () => {
   const [networkBalance, setNetworkBalance] = useState<number>(0);
   const [prices, setPrices] = useState<{ [key: string]: string }>({});
 
+  const [isApproved, setIsApproved] = useState<boolean | null>(null);
+
   useEffect(() => {
     const fetchBalancesAndPrices = async () => {
       if (!provider) return;
@@ -69,6 +71,26 @@ const WalletScreen = () => {
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    const checkUserApproval = async () => {
+      if (!walletAddress) return;
+      console.log(`in use effect for checkuser`);
+      try {
+        const response = await fetch(`https://wfounders.club/api/is-approved?address=${walletAddress}`);
+        const data = await response.json();
+
+        setIsApproved(data.found && data.isApproved);
+      } catch (error) {
+        console.error("Error checking user approval:", error);
+        setIsApproved(false); // Default to false if API fails
+      }
+    };
+
+    if (walletAddress) {
+      checkUserApproval();
+    }
+  }, [walletAddress]);
 
   if (!loggedIn) return null; // Hide if not logged in
 
@@ -133,6 +155,24 @@ const WalletScreen = () => {
         <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
           {chainConfig.displayName}
         </div>
+
+        {isApproved ? (
+          <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
+            Is  Approved
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center mt-4 p-4 bg-gray-700 rounded-lg shadow-md">
+            <p className="text-gray-300 text-sm mb-2">Scan to receive:</p>
+            <div className="bg-white p-3 rounded-lg shadow-lg animate-fade-in">
+              <img 
+                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${walletAddress}`} 
+                alt="Wallet QR Code" 
+                className="w-40 h-40 rounded-md"
+              />
+            </div>
+            <p className="text-gray-400 text-xs mt-3 break-all">{walletAddress}</p>
+          </div>
+        )}
 
         {/* Balance & Actions */}
         {/* Balance Card */}
