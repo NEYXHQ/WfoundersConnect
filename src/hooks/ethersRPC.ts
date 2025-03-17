@@ -144,7 +144,7 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
 
     const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
-    console.log(`NEYXT Balance in RPC : ${balance}`);
+    
     return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
   } catch (error) {
     return `Error: ${error}`;

@@ -4,7 +4,6 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Web3AuthProvider, useWeb3Auth } from "./context/Web3AuthContext";
 import LoginButton from "./components/LoginButton";
 import WalletScreen from "./components/WalletScreen";
-import OnBoardingMint from "./components/OnBoardingMint"; // ✅ Import onboarding screen
 
 function App() {
   return (
@@ -23,7 +22,6 @@ function MainContent() {
     <div className="container flex flex-col items-center justify-center min-h-screen bg-[#141414] text-white">
       <Routes>
         <Route path="/" element={loggedIn ? <WalletScreen /> : <LoginButton />} />
-        <Route path="/onboarding" element={<OnBoardingMint />} /> {/* ✅ New Route */}
       </Routes>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import OnBoardingMint from "./OnBoardingMint";
 import BalanceCard from "./BalanceCard";
 import TokenList from "./TokenList";
 import NFTList from "./NFTList";
@@ -21,7 +22,14 @@ const WalletScreen = () => {
   const [networkBalance, setNetworkBalance] = useState<number>(0);
   const [prices, setPrices] = useState<{ [key: string]: string }>({});
 
-  const [isApproved, setIsApproved] = useState<boolean | null>(null);
+  enum UserClubStatus {
+    UNAPPROVED = 0, // No wallet
+    WAITING = 1, // Connected wallet and approval process started and waiting to be approved
+    APPROVED = 2, // Approved
+    UNREGISTERED = 3, // No wallet and no name 
+  }
+
+  const [approvalStatus, setApprovalStatus] = useState<UserClubStatus>(UserClubStatus.APPROVED);
 
   useEffect(() => {
     const fetchBalancesAndPrices = async () => {
@@ -45,14 +53,6 @@ const WalletScreen = () => {
         const data = await response.json();
         setPrices(data.data.attributes.token_prices);
 
-        console.log(`In WalletScreen useEffect`);
-        console.log(`   - Address       ${walletAddress}`);
-        console.log(`   - Neyxt Balance ${neyxtBalance ?? "--"}`);
-        console.log(`   - NEtwork Balan ${networkBalance}`);
-        for (const key in prices) {
-          console.log(`   - prices ${prices[key]} / key ${key}`);
-        }
-        console.log(`   - prices2 ${prices["0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0"]}`);
       } catch (error) {
         console.error("Error fetching balances/prices:", error);
       }
@@ -73,22 +73,23 @@ const WalletScreen = () => {
   }, []);
 
   useEffect(() => {
-    const checkUserApproval = async () => {
+    const checkUserClubStatus = async () => {
       if (!walletAddress) return;
-      console.log(`in use effect for checkuser`);
+
       try {
         const response = await fetch(`https://wfounders.club/api/is-approved?address=${walletAddress}`);
         const data = await response.json();
 
-        setIsApproved(data.found && data.isApproved);
+        setApprovalStatus(data.status);
+        console.log(`Approval Status (in walletScreen)= ${data.status}`);
+
       } catch (error) {
         console.error("Error checking user approval:", error);
-        setIsApproved(false); // Default to false if API fails
       }
     };
 
     if (walletAddress) {
-      checkUserApproval();
+      checkUserClubStatus();
     }
   }, [walletAddress]);
 
@@ -155,24 +156,27 @@ const WalletScreen = () => {
         <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
           {chainConfig.displayName}
         </div>
+        <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
+          Status : {approvalStatus}
+        </div>
 
-        {isApproved ? (
-          <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
-            Is  Approved
-          </div>
-        ) : (
-          <div className="flex flex-col items-center justify-center mt-4 p-4 bg-gray-700 rounded-lg shadow-md">
-            <p className="text-gray-300 text-sm mb-2">Scan to receive:</p>
-            <div className="bg-white p-3 rounded-lg shadow-lg animate-fade-in">
-              <img 
-                src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${walletAddress}`} 
-                alt="Wallet QR Code" 
-                className="w-40 h-40 rounded-md"
-              />
-            </div>
-            <p className="text-gray-400 text-xs mt-3 break-all">{walletAddress}</p>
-          </div>
-        )}
+        <div className="text-xs text-gray-400 text-right opacity-70 mt-2 mb-2">
+          {approvalStatus === UserClubStatus.APPROVED && (
+            <span className="text-green-400">✅ Approved</span>
+          )}
+          {(approvalStatus === UserClubStatus.UNAPPROVED ||
+            approvalStatus === UserClubStatus.UNREGISTERED ||
+            approvalStatus === UserClubStatus.WAITING) && (
+              <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
+                <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
+                <OnBoardingMint
+                  address={walletAddress ?? ""}
+                  approvalStatus={approvalStatus} // ✅ Pass initial status
+                  onApprovalStatusChange={(newStatus: UserClubStatus) => setApprovalStatus(newStatus)}
+                />
+              </div>
+            )}
+        </div>
 
         {/* Balance & Actions */}
         {/* Balance Card */}
