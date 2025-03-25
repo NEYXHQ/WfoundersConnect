@@ -32,7 +32,7 @@ const WalletScreen = () => {
   }
 
   const [approvalStatus, setApprovalStatus] = useState(UserClubStatus.APPROVED);
-  const [isMintingNFT, setIsMintingNFT] = useState(false); // ✅ New state for NFT minting
+  const [isOnboarding, setIsOnBoarding] = useState(false); // ✅ New state for NFT minting
 
 
   useEffect(() => {
@@ -166,7 +166,7 @@ const WalletScreen = () => {
 
         {/* Approval & Onboarding Section */}
         <div className="text-xs text-gray-400 text-right opacity-70 mt-2 mb-2">
-          {isMintingNFT ? (
+          {isOnboarding ? (
             <div className="bg-green-700 p-4 rounded-lg shadow-lg text-white flex items-center justify-center space-x-2">
               <FaSpinner className="animate-spin text-white text-lg" />
               <p>Welcome to WFounders Club, minting your membership NFT...</p>
@@ -180,8 +180,8 @@ const WalletScreen = () => {
                 address={walletAddress ?? ""}
                 approvalStatus={approvalStatus} // ✅ Pass initial status
                 onApprovalStatusChange={(newStatus: UserClubStatus) => setApprovalStatus(newStatus)}
-                isMintingNFT={isMintingNFT}
-                onMintChange={(mintChange: boolean) => setIsMintingNFT(mintChange)}
+                isOnBoarding={isOnboarding}
+                onIsOnBoardingChange={(isOnBoardingChange: boolean) => setIsOnBoarding(isOnboarding)}
               />
             </div>
           )}

@@ -1,18 +1,21 @@
 import { useEffect, useRef, useState } from "react";
 import { Html5Qrcode } from "html5-qrcode";
+import logo from "../assets/WF_logo-mid.png"; // Add your logo to /assets or update path
+import { FiCheck, FiX, FiRefreshCcw, FiUser } from "react-icons/fi"; // Add at the top with other imports
 
 const OracleApproveScreen = () => {
     const wsRef = useRef<WebSocket | null>(null);
     const [status, setStatus] = useState<string | null>(null);
     const [scannedAddress, setScannedAddress] = useState<string | null>(null);
     const [scannedUser, setScannedUser] = useState<string | null>(null);
+    const [isScanning, setIsScanning] = useState(true);
+    const [txHash, setTxHash] = useState<string | null>(null);
+
     useEffect(() => {
-        // WebSocket setup
         const ws = new WebSocket("wss://wfounders.club/ws/");
         wsRef.current = ws;
 
         ws.onopen = () => console.log("✅ WebSocket connected");
-        ws.onclose = () => console.log("☑️ WebSocket closed");
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("📩 Message from server:", data);
@@ -22,20 +25,20 @@ const OracleApproveScreen = () => {
                 setStatus(`👤 Name: ${name}`);
                 setScannedAddress(address);
                 setScannedUser(name);
+                setIsScanning(false);
             }
 
             if (data.event === "user_info_not_found") {
                 setStatus("❌ User not found");
+                setIsScanning(false);
             }
 
             if (data.event === "approval_success") {
-                setStatus("✅ User approved & NFT minted!");
+                setStatus(`✅ NFT Minted!`);
+                setTxHash(data.txHash);
             }
         };
-        ws.onerror = (err) => console.error("❌ WebSocket error:", err);
-        ws.onclose = () => console.log("🔌 WebSocket disconnected");
 
-        // Scanner setup
         const html5QrCode = new Html5Qrcode("reader");
 
         Html5Qrcode.getCameras().then((devices) => {
@@ -44,7 +47,7 @@ const OracleApproveScreen = () => {
 
             const readerElement = document.getElementById("reader");
             const width = readerElement?.offsetWidth || 300;
-            const qrboxSize = Math.min(250, width - 20); // Ensure box fits inside element
+            const qrboxSize = Math.min(250, width - 20);
 
             html5QrCode
                 .start(
@@ -55,33 +58,11 @@ const OracleApproveScreen = () => {
                         html5QrCode.stop().then(() => html5QrCode.clear());
 
                         const address = decodedText.trim();
-
-                        wsRef.current?.send(
-                            JSON.stringify({
-                                event: "get_user_info",
-                                address,
-                            })
-                        );
-
-                        // if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                        //   wsRef.current.send(
-                        //     JSON.stringify({
-                        //       event: "approve_user",
-                        //       address,
-                        //     })
-                        //   );
-                        //   setStatus(`✅ Approval sent for: ${address}`);
-                        // } else {
-                        //   setStatus("⚠️ WebSocket not connected.");
-                        // }
+                        wsRef.current?.send(JSON.stringify({ event: "get_user_info", address }));
                     },
-                    (err) => {
-                        // Ignore minor scan errors
-                    }
+                    () => { }
                 )
-                .catch((err) => {
-                    console.error("❌ QR Scanner start failed:", err);
-                });
+                .catch((err) => console.error("❌ QR Scanner start failed:", err));
         });
 
         return () => {
@@ -90,24 +71,85 @@ const OracleApproveScreen = () => {
         };
     }, []);
 
-    return (
-        <div className="flex flex-col items-center justify-center p-4 text-white">
-            <h1 className="text-xl mb-4">Scan to Approve User</h1>
-            <div id="reader" className="w-full max-w-md" style={{ height: "auto" }} />
-            {status && <p className="mt-4 text-green-400">{status}</p>}
+    const restartScan = () => window.location.reload();
 
+    return (
+
+        <div className="min-h-screen bg-[#121212] text-white flex flex-col items-center justify-start p-6 relative">
+            {/* Top Bar */}
+            <div className="w-full flex items-center justify-between mb-6 px-4">
+                {/* Logo */}
+                <div className="flex items-center gap-3">
+                    <img src={logo} alt="Logo" className="h-10 w-auto" />
+                    <h1 className="text-xl font-semibold text-orange-400">Oracle Approval</h1>
+                </div>
+
+                {/* Oracle Info */}
+                <div className="flex flex-col items-start text-sm text-gray-300 bg-gray-800 px-3 py-2 rounded-lg border border-gray-700 max-w-xs shadow-sm">
+                    <div className="flex items-center gap-2">
+                        <FiUser className="text-orange-300" />
+                        <span className="font-medium">Oracle</span>
+                    </div>
+                    <span className="truncate text-xs text-orange-200 pl-6">0x34FD...CCB1f</span>
+                </div>
+            </div>
+
+            {/* QR Scanner */}
+            <div id="reader" className="w-full max-w-md rounded-lg overflow-hidden shadow-lg border border-gray-700" />
+
+            {/* Status Message */}
+            {status && (
+                <div className="mt-4 text-sm text-center text-orange-300 bg-gray-800 px-4 py-2 rounded-lg shadow-sm">
+                    {status}
+                </div>
+            )}
+
+            {/* Action Buttons */}
             {scannedUser && (
-                <button
-                    className="mt-4 bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-                    onClick={() => {
-                        wsRef.current?.send(JSON.stringify({
-                            event: "approve_user",
-                            address: scannedAddress,
-                        }));
-                    }}
-                >
-                    ✅ Approve {scannedUser}
-                </button>
+                <div className="mt-6 flex flex-col gap-3 w-full max-w-xs">
+                    <button
+                        onClick={() => {
+                            wsRef.current?.send(JSON.stringify({
+                                event: "approve_user",
+                                address: scannedAddress,
+                            }));
+                        }}
+                        className="flex items-center gap-2 bg-green-800 hover:bg-green-700 text-sm text-white px-4 py-2 rounded-md transition-all"
+                    >
+                        <FiCheck /> Approve {scannedUser}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            setStatus("❌ Approval cancelled");
+                            setScannedUser(null);
+                            setScannedAddress(null);
+                        }}
+                        className="flex items-center gap-2 bg-red-800 hover:bg-red-700 text-sm text-white px-4 py-2 rounded-md transition-all"
+                    >
+                        <FiX /> Deny
+                    </button>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-sm text-white px-4 py-2 rounded-md transition-all"
+                    >
+                        <FiRefreshCcw /> Restart Scan
+                    </button>
+
+                    {txHash && (
+                        <a
+                            href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-sm underline text-blue-300 mt-2"
+                        >
+                            View Transaction ↗
+                        </a>
+                    )}
+                </div>
+
+
             )}
         </div>
     );
