@@ -6,6 +6,8 @@ import NFTList from "./NFTList";
 import BottomNav from "./BottomNav";
 import { useWeb3Auth, chainConfig } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
+import { FaSpinner } from "react-icons/fa"; // ✅ Loading icon
+
 
 import RPC from "../hooks/ethersRPC";
 
@@ -29,7 +31,9 @@ const WalletScreen = () => {
     UNREGISTERED = 3, // No wallet and no name 
   }
 
-  const [approvalStatus, setApprovalStatus] = useState<UserClubStatus>(UserClubStatus.APPROVED);
+  const [approvalStatus, setApprovalStatus] = useState(UserClubStatus.APPROVED);
+  const [isMintingNFT, setIsMintingNFT] = useState(false); // ✅ New state for NFT minting
+
 
   useEffect(() => {
     const fetchBalancesAndPrices = async () => {
@@ -160,22 +164,27 @@ const WalletScreen = () => {
           Status : {approvalStatus}
         </div>
 
+        {/* Approval & Onboarding Section */}
         <div className="text-xs text-gray-400 text-right opacity-70 mt-2 mb-2">
-          {approvalStatus === UserClubStatus.APPROVED && (
+          {isMintingNFT ? (
+            <div className="bg-green-700 p-4 rounded-lg shadow-lg text-white flex items-center justify-center space-x-2">
+              <FaSpinner className="animate-spin text-white text-lg" />
+              <p>Welcome to WFounders Club, minting your membership NFT...</p>
+            </div>
+          ) : approvalStatus === UserClubStatus.APPROVED ? (
             <span className="text-green-400">✅ Approved</span>
+          ) : (
+            <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
+              <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
+              <OnBoardingMint
+                address={walletAddress ?? ""}
+                approvalStatus={approvalStatus} // ✅ Pass initial status
+                onApprovalStatusChange={(newStatus: UserClubStatus) => setApprovalStatus(newStatus)}
+                isMintingNFT={isMintingNFT}
+                onMintChange={(mintChange: boolean) => setIsMintingNFT(mintChange)}
+              />
+            </div>
           )}
-          {(approvalStatus === UserClubStatus.UNAPPROVED ||
-            approvalStatus === UserClubStatus.UNREGISTERED ||
-            approvalStatus === UserClubStatus.WAITING) && (
-              <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
-                <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
-                <OnBoardingMint
-                  address={walletAddress ?? ""}
-                  approvalStatus={approvalStatus} // ✅ Pass initial status
-                  onApprovalStatusChange={(newStatus: UserClubStatus) => setApprovalStatus(newStatus)}
-                />
-              </div>
-            )}
         </div>
 
         {/* Balance & Actions */}

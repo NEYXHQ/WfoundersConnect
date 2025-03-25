@@ -186,6 +186,26 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
   }
 };
 
+const mintMemberNFT = async (provider: IProvider, recipient: string, tokenId: number): Promise<any> => {
+  try {
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+
+    const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, [
+      "function safeMint(address to, uint256 tokenId) public",
+    ], signer);
+
+    const tx = await contract.safeMint(recipient, tokenId);
+    console.log(`🚀 Minting NFT. TX: ${tx.hash}`);
+    const receipt = await tx.wait();
+    console.log(`✅ Minted NFT for ${recipient}:`, receipt);
+    return receipt;
+  } catch (error) {
+    console.error("❌ Error minting NFT:", error);
+    throw error;
+  }
+};
+
 export default {
   getChainId,
   getAccounts,
@@ -196,6 +216,7 @@ export default {
   sendTransaction,
   sendToken,
   signMessage,
+  mintMemberNFT, 
 };
 
 // export default {getChainId, getAccounts, getBalance, sendTransaction, signMessage};

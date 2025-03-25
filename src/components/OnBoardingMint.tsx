@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import RPC from "../hooks/ethersRPC";
+import { useWeb3Auth } from "../context/Web3AuthContext"; // To access the provider
 
 enum UserClubStatus {
   UNAPPROVED = 0,
@@ -9,46 +11,31 @@ enum UserClubStatus {
 
 interface OnBoardingMintProps {
   address: string;
-  approvalStatus: UserClubStatus; // ✅ Ensure it's an enum
-  onApprovalStatusChange: (status: UserClubStatus) => void; // ✅ Use correct type
+  approvalStatus: UserClubStatus;
+  onApprovalStatusChange: (status: UserClubStatus) => void;
+  isMintingNFT: boolean;
+  onMintChange: (minting: boolean) => void;
 }
-
 
 const OnBoardingMint: React.FC<OnBoardingMintProps> = ({ 
   address, 
   approvalStatus, 
-  onApprovalStatusChange 
+  onApprovalStatusChange, 
+  isMintingNFT,
+  onMintChange
 }) => {
-  
-  const [localApprovalStatus, setLocalApprovalStatus] = useState<UserClubStatus>(approvalStatus);
 
-  // Sync with parent when prop changes
-  useEffect(() => {
-    setLocalApprovalStatus(approvalStatus);
-  }, [approvalStatus]);
-
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<{ name: string; email: string; address: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const [inputValue, setInputValue] = useState(""); // ✅ Input field value
+  const [selectedUser, setSelectedUser] = useState<{ name: string; email: string; address: string } | null>(null);
 
-  const updateApprovalStatus = (status: UserClubStatus) => {
-    setLocalApprovalStatus(status);
-    onApprovalStatusChange(status); // 🔹 Notify WalletScreen
-  };
-
-  const generateRandomString = (length: number) => {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += characters.charAt(Math.floor(Math.random() * characters.length));
-    }
-    return result;
-  };
+  const { provider } = useWeb3Auth(); // 👈 Get provider from context
 
   useEffect(() => {
-
     console.log("OnBoardMint is rendering...");
 
     const fetchUsers = async () => {
@@ -71,13 +58,15 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
 
     fetchUsers();
 
-    // Setup WebSocket connection
     console.log("🔵 Initializing WebSocket...");
-
     const socket = new WebSocket("wss://wfounders.club/ws/");
 
     socket.onopen = () => {
       console.log("✅ WebSocket connected successfully!");
+      socket.send(JSON.stringify({
+        event: "register_session",
+        address: address, // user's current address
+      }));
     };
 
     socket.onclose = (event) => {
@@ -88,13 +77,25 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
       console.error("❌ WebSocket Error:", error);
     };
 
-    socket.onmessage = (event) => {
+    socket.onmessage = async (event) => {
       const data = JSON.parse(event.data);
-      console.log(`📩 Data Event received: ${data.event}`);
+      console.log(`📩 Data Event received: ${data.event}`, data);
 
       if (data.event === "approval_success") {
         setApprovalMessage("✅ Welcome to WFounders Web3 Ecosystem");
-        updateApprovalStatus(UserClubStatus.APPROVED);
+        onApprovalStatusChange(UserClubStatus.APPROVED);
+        onMintChange(true);
+
+        // try {
+        //   await RPC.mintMemberNFT(provider, address, data.tokenID); // 🚀 MINT!
+        //   console.log("🎉 NFT minted successfully!");
+        // } catch (error) {
+        //   console.error("❌ NFT minting failed:", error);
+        // }
+    
+        setTimeout(() => {
+          onMintChange(false);
+        }, 5000); // Hide after 5 seconds
         console.log("🔹 Updating approval status to APPROVED");
       }
     };
@@ -107,38 +108,59 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
     };
   }, []);
 
-  const handleUserApprovalRequest = (user: any) => {
+  const handleUserApprovalRequest = () => {
+    if (!selectedUser || !ws || ws.readyState !== WebSocket.OPEN) return;
 
-    if (ws && ws.readyState === WebSocket.OPEN) {
-      ws.send(
-        JSON.stringify({
-          event: "waiting_for_approval",
-          new_address: address,
-          name: user.name,
-          email: user.email,
-          address: user.address,
-        })
-      );
-      setUsers([]); // Remove list of new users
-      setApprovalMessage(`⏳ Waiting for approval for ${user.name}`);
-      updateApprovalStatus(UserClubStatus.WAITING);
-      console.log("setApprovalStatus in OnBoardingMint (waiting for approval)");
+    ws.send(
+      JSON.stringify({
+        event: "waiting_for_approval",
+        new_address: address,
+        name: selectedUser.name,
+        email: selectedUser.email,
+        address: selectedUser.address,
+      })
+    );
+
+    setApprovalMessage(`⏳ Waiting for approval for ${selectedUser.name}`);
+    onApprovalStatusChange(UserClubStatus.WAITING);
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputValue(e.target.value);
+
+    // **Filter users by input value**
+    const matches = users.filter(user =>
+      user.name.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+
+    // **If only one name remains, auto-select it**
+    if (matches.length === 1) {
+      setSelectedUser(matches[0]);
+    } else {
+      setSelectedUser(null);
     }
   };
 
   return (
+    <div className="flex flex-col items-center rounded-lg justify-center bg-gray-900 text-white p-4">
 
-    <div className="flex flex-col items-center rounded-lg justify-center bg-gray-900 text-white">
+      {/* Display Approval Status */}
       <div className="relative bg-green-700 text-white p-4 rounded-lg shadow-lg max-w-md text-center">
-          <p className="text-lg font-semibold">Status : {approvalStatus}</p>
-        </div>
+        <p className="text-lg font-semibold">Status: {UserClubStatus[approvalStatus]}</p>
+      </div>
 
-      {approvalStatus === UserClubStatus.APPROVED ? (
+      {/* Show Welcome Message */}
+      {approvalStatus === UserClubStatus.APPROVED && (
         <div className="relative bg-green-700 text-white p-4 rounded-lg shadow-lg max-w-md text-center">
-          <button onClick={() => setApprovalMessage(null)} className="absolute top-2 right-2 text-white hover:text-gray-300">✖</button>
+          <button onClick={() => setApprovalMessage(null)} className="absolute top-2 right-2 text-white hover:text-gray-300">
+            ✖
+          </button>
           <p className="text-lg font-semibold">🎉 Welcome to WFounders Club Ecosystem</p>
         </div>
-      ) : approvalStatus === UserClubStatus.WAITING ? (
+      )}
+
+      {/* Show QR Code when Waiting */}
+      {approvalStatus === UserClubStatus.WAITING && (
         <div className="flex justify-center p-3 rounded-lg animate-fade-in">
           <div className="relative">
             <div className="absolute inset-0 w-full h-full bg-blue-500 blur-xl opacity-50 rounded-md animate-pulse" />
@@ -146,24 +168,37 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
               className="relative w-40 h-40 rounded-md shadow-lg border-2 border-blue-400" />
           </div>
         </div>
-      ) : loading ? (
-        <p className="text-gray-400">Loading users...</p>
-      ) : error ? (
-        <p className="text-red-400">{error}</p>
-      ) : users.length === 0 ? (
-        <p className="text-gray-500">No new users found.</p>
-      ) : (
-        <ul className="w-full max-w-md bg-gray-800 p-4 rounded-lg shadow-md">
-          <h1 className="text-xl font-bold mb-4">Pick your Name</h1>
-          {users.map((user, index) => (
-            <li key={index} className="border-b border-gray-700 p-2 cursor-pointer hover:bg-gray-700 transition"
-              onClick={() => handleUserApprovalRequest(user)}>
-              <p className="text-white font-medium">{user.name}</p>
-              <p className="text-gray-400 text-sm">{user.email} - Address - {user.address}</p>
-            </li>
-          ))}
-        </ul>
       )}
+
+      {/* Show Input Field When User Needs to Select Name */}
+      {(approvalStatus === UserClubStatus.UNREGISTERED || approvalStatus === UserClubStatus.UNAPPROVED) && (
+        <div className="w-full max-w-md bg-gray-800 p-4 rounded-lg shadow-md mt-4">
+          <h1 className="text-xl font-bold mb-4">Pick Your Name</h1>
+
+          {/* Input Field */}
+          <input
+            type="text"
+            value={inputValue}
+            onChange={handleInputChange}
+            placeholder="Start typing your name..."
+            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none"
+          />
+
+          {/* Display Selected Name If Available */}
+          {selectedUser && (
+            <div className="mt-4 p-3 bg-gray-900 text-white rounded-lg">
+              <p className="text-lg font-bold">{selectedUser.name}</p>
+              <button 
+                onClick={handleUserApprovalRequest} 
+                className="mt-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded text-white"
+              >
+                Confirm Selection
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 };
