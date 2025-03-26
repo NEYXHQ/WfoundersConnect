@@ -217,7 +217,6 @@ const WalletScreen = () => {
         {approvalStatus === UserClubStatus.APPROVED && (
           <NFTList key={`nftlist-${approvalStatus}`} />
         )}
-        <NFTList />
 
         {/* Bottom Navigation */}
         {/* <BottomNav /> */}

@@ -221,7 +221,7 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
       {/* Show Input Field When User Needs to Select Name */}
       {(approvalStatus === UserClubStatus.UNREGISTERED || approvalStatus === UserClubStatus.UNAPPROVED) && (
         <div className="w-full max-w-md bg-gray-800 p-4 rounded-lg shadow-md mt-4">
-          <h1 className="text-xl font-bold mb-4">Pick Your Name</h1>
+
 
           {/* Input Field */}
           <input
@@ -229,7 +229,7 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
             value={inputValue}
             onChange={handleInputChange}
             placeholder="Start typing your name..."
-            className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none"
+            className="text-base w-full p-2 rounded bg-gray-700 text-white border border-gray-600 focus:outline-none"
           />
 
           {/* Display Selected Name If Available */}
