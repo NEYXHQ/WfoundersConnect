@@ -103,8 +103,10 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
     setWs(socket);
 
     return () => {
-      console.log("🚪 Closing WebSocket due to unmounting");
-      socket.close();
+      console.log("🚪 Closing WebSocket due to unmounting in 5 sec");
+      setTimeout(() => {
+        socket.close();
+      }, 5000); 
     };
   }, []);
 

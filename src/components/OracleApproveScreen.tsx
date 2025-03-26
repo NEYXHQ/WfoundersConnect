@@ -10,15 +10,21 @@ const OracleApproveScreen = () => {
     const [scannedUser, setScannedUser] = useState<string | null>(null);
     const [isScanning, setIsScanning] = useState(true);
     const [txHash, setTxHash] = useState<string | null>(null);
+    const [isMinting, setIsMinting] = useState(false);
+    const [mintCompleted, setMintCompleted] = useState(false);
+
+    const scannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
         const ws = new WebSocket("wss://wfounders.club/ws/");
         wsRef.current = ws;
 
         ws.onopen = () => console.log("✅ WebSocket connected");
+
         ws.onmessage = (event) => {
             const data = JSON.parse(event.data);
             console.log("📩 Message from server:", data);
+            console.log(`MEssage received with user ${scannedUser}`);
 
             if (data.event === "user_info") {
                 const { name, email, address } = data;
@@ -26,6 +32,10 @@ const OracleApproveScreen = () => {
                 setScannedAddress(address);
                 setScannedUser(name);
                 setIsScanning(false);
+                wsRef.current?.send(JSON.stringify({
+                    event: "register_session",
+                    address: address, // user's current address
+                  }));
             }
 
             if (data.event === "user_info_not_found") {
@@ -34,12 +44,23 @@ const OracleApproveScreen = () => {
             }
 
             if (data.event === "approval_success") {
-                setStatus(`✅ NFT Minted!`);
+                console.log(`Approval success received with user ${scannedUser}`);
+                setIsMinting(false);
+                setMintCompleted(true);
                 setTxHash(data.txHash);
+                setStatus(`✅ NFT Minted`);
+            }
+
+            if (data.event === "minting in progress") {
+                console.log(`data name = ${data.name}`);
+                setScannedUser(data.name);
+                console.log(`user after mint progress ${scannedUser}`);
+                setIsMinting(true);
+                setStatus(`⏳ Minting in progress`);
             }
         };
 
-        const html5QrCode = new Html5Qrcode("reader");
+        scannerRef.current = new Html5Qrcode("reader");
 
         Html5Qrcode.getCameras().then((devices) => {
             const backCamera = devices.find((d) => d.label.toLowerCase().includes("back"));
@@ -49,13 +70,12 @@ const OracleApproveScreen = () => {
             const width = readerElement?.offsetWidth || 300;
             const qrboxSize = Math.min(250, width - 20);
 
-            html5QrCode
-                .start(
+            scannerRef.current?.start(
                     cameraId,
                     { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } },
                     (decodedText) => {
                         console.log("✅ Scanned:", decodedText);
-                        html5QrCode.stop().then(() => html5QrCode.clear());
+                        scannerRef.current?.stop().then(() => scannerRef.current?.clear());
 
                         const address = decodedText.trim();
                         wsRef.current?.send(JSON.stringify({ event: "get_user_info", address }));
@@ -66,7 +86,8 @@ const OracleApproveScreen = () => {
         });
 
         return () => {
-            html5QrCode.stop().then(() => html5QrCode.clear());
+            scannerRef.current?.stop().then(() => scannerRef.current?.clear());
+            console.log(`Closing socket of approver`)
             ws.close();
         };
     }, []);
@@ -109,12 +130,21 @@ const OracleApproveScreen = () => {
                 <div className="mt-6 flex flex-col gap-3 w-full max-w-xs">
                     <button
                         onClick={() => {
+                            console.log(`minting true with user ${scannedUser}`);
+                            setIsMinting(true);
+                            console.log(`minting true with user after ${scannedUser}`);
+                            setStatus(`Minting in progress for ${scannedUser}`);
                             wsRef.current?.send(JSON.stringify({
                                 event: "approve_user",
                                 address: scannedAddress,
                             }));
                         }}
-                        className="flex items-center gap-2 bg-green-800 hover:bg-green-700 text-sm text-white px-4 py-2 rounded-md transition-all"
+                        className={`flex items-center gap-2 text-sm text-white px-4 py-2 rounded-md transition-all
+                            ${isMinting ? "bg-green-800 opacity-50 cursor-not-allowed" : "bg-green-800 hover:bg-green-700"}
+                            ${mintCompleted ? "hidden" : ""}
+                        `}
+                        disabled={isMinting}
+                        
                     >
                         <FiCheck /> Approve {scannedUser}
                     </button>
@@ -125,13 +155,45 @@ const OracleApproveScreen = () => {
                             setScannedUser(null);
                             setScannedAddress(null);
                         }}
-                        className="flex items-center gap-2 bg-red-800 hover:bg-red-700 text-sm text-white px-4 py-2 rounded-md transition-all"
+                        className={`flex items-center gap-2 text-sm text-white px-4 py-2 rounded-md transition-all
+                            ${isMinting ? "bg-red-800 opacity-50 cursor-not-allowed" : "bg-red-800 hover:bg-red-700"}
+                            ${mintCompleted ? "hidden" : ""}
+                        `}
+                        disabled={isMinting}
                     >
                         <FiX /> Deny
                     </button>
 
                     <button
-                        onClick={() => window.location.reload()}
+                        onClick={() => {
+                            setStatus(null);
+                            setScannedAddress(null);
+                            setScannedUser(null);
+                            setTxHash(null);
+                            setIsMinting(false);
+                            setMintCompleted(false);
+                            Html5Qrcode.getCameras().then((devices) => {
+                                const backCamera = devices.find((d) => d.label.toLowerCase().includes("back"));
+                                const cameraId = backCamera ? backCamera.id : devices[0].id;
+                          
+                                const readerElement = document.getElementById("reader");
+                                const width = readerElement?.offsetWidth || 300;
+                                const qrboxSize = Math.min(250, width - 20);
+                          
+                                scannerRef.current?.start(
+                                  cameraId,
+                                  { fps: 10, qrbox: { width: qrboxSize, height: qrboxSize } },
+                                  (decodedText) => {
+                                    console.log("✅ Rescanned:", decodedText);
+                                    scannerRef.current?.stop().then(() => scannerRef.current?.clear());
+                          
+                                    const address = decodedText.trim();
+                                    wsRef.current?.send(JSON.stringify({ event: "get_user_info", address }));
+                                  },
+                                  () => {}
+                                );
+                              });
+                        }}
                         className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-sm text-white px-4 py-2 rounded-md transition-all"
                     >
                         <FiRefreshCcw /> Restart Scan
