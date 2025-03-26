@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useWeb3Auth } from "../context/Web3AuthContext"; // To access the provider
 import { FiUnlock } from "react-icons/fi";
+import { FaRegCheckCircle } from "react-icons/fa";
 
 enum UserClubStatus {
   UNAPPROVED = 0,
@@ -84,7 +85,7 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
       if (data.event === "approval_success") {
 
         
-        setApprovalMessage("🎉 Minting successful!");
+        setApprovalMessage(" Minting successful!");
         setTxHash(data.txHash); // new state
 
         setTimeout(() => {
@@ -147,9 +148,22 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
     <div className="flex flex-col items-center rounded-lg justify-center bg-gray-900 text-white p-4">
 
       {approvalMessage && (
-        <div className="relative bg-green-700 p-4 rounded-lg shadow-lg max-w-md text-center mt-4">
-          <button onClick={() => { setApprovalMessage(null); onIsOnBoardingChange(false);}} className="absolute top-2 right-2 text-white hover:text-gray-300">✖</button>
-          <p className="text-lg font-semibold">{approvalMessage}</p>
+        <div className="relative bg-[#1a1f1c] border border-orange-400/40 p-6 rounded-2xl shadow-inner max-w-md text-center mt-4">
+          <button
+            onClick={() => {
+              setApprovalMessage(null);
+              onIsOnBoardingChange(false);
+            }}
+            className="absolute top-4 right-4 text-orange-100 hover:text-orange-100"
+          >
+            ✖
+          </button>
+        
+          <div className="flex justify-center items-center gap-2 text-orange-300 text-lg font-semibold mb-2">
+            {txHash && <FaRegCheckCircle className="text-orange-400 text-xl" />}
+            {approvalMessage}
+          </div>
+        
           {txHash && (
             <a
               href={`https://amoy.polygonscan.com/tx/${txHash}`}
@@ -178,12 +192,12 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
         <div className="flex flex-col items-center gap-4 p-4 rounded-lg bg-gray-800 shadow-md animate-fade-in w-full max-w-md">
 
           {/* Status Message */}
-          <div className="w-full bg-green-800/60 border border-green-500/30 rounded-lg p-4 text-center">
-            <div className="flex items-center justify-center gap-2 text-green-100 text-lg font-medium">
-              <FiUnlock className="text-green-300 text-xl" />
+          <div className="w-full max-w-md bg-[#1a1f1c] border border-orange-400/40 rounded-2xl p-4 shadow-inner text-center">
+            <div className="flex items-center justify-center gap-2 text-orange-300 text-base font-semibold">
+              <FiUnlock className="text-orange-400 text-xl" />
               Almost there!
             </div>
-            <p className="text-sm text-green-200 mt-2">
+            <p className="text-sm text-orange-200 mt-2">
               Please show your screen to an Oracle to complete your onboarding.
             </p>
           </div>
