@@ -10,7 +10,10 @@ const NFTList = () => {
 
     useEffect(() => {
         const fetchNFTs = async () => {
-            if (!provider) return;
+            if (!provider) {
+                console.log(`No provider`);
+                return;
+            }
 
             try {
                 setLoading(true);
@@ -33,7 +36,7 @@ const NFTList = () => {
             {loading ? (
                 <p className="text-gray-400">Loading NFTs...</p>
             ) : nfts.length === 0 ? (
-                <p className="text-gray-500">No NFTs found for this wallet.</p>
+                <p className="text-gray-500">No NFTs found for this wallet...</p>
             ) : (
                 <div className="space-y-4">
                     {nfts.map((nft, index) => {

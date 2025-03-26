@@ -3,12 +3,12 @@ import type { IProvider } from "@web3auth/base";
 import { ethers } from "ethers";
 
 // // NEYXT & NFT Contracts - PROD
-// const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
-// const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
+const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
+const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
 
 // NEYXT & NFT Contracts - DEV
-const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
-const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
+// const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
+// const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
 
 // ERC20 ABI for balance
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
@@ -154,6 +154,7 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
 // for now only fetches in NFT per address
 const getNFTs = async (provider: IProvider): Promise<any[]> => {
   try {
+    console.log(`Getting NFTS ...`);
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
     const address = await signer.getAddress();
@@ -161,14 +162,17 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
 
+    console.log(`Balance is : ${balance}`);
+
     if (balance.toString() === "0") return [];
 
     const nfts = [];
     // // PROD
-    // const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
+    console.log(`https://wfounders.club/api/metadata/${address}`);
+    const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
 
-    // DEV
-    const response = await fetch(`https://wfounders.club/api/metadata/amoy/${address}`);
+    // // DEV
+    // const response = await fetch(`https://wfounders.club/api/metadata/amoy/${address}`);
 
     if (!response.ok) throw new Error("No NFT found for this wallet.");
 

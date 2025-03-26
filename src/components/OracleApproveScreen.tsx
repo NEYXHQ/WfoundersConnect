@@ -201,7 +201,7 @@ const OracleApproveScreen = () => {
 
                     {txHash && (
                         <a
-                            href={`https://amoy.polygonscan.com/tx/${txHash}`}
+                            href={`https://polygonscan.com/tx/${txHash}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-sm underline text-blue-300 mt-2"
