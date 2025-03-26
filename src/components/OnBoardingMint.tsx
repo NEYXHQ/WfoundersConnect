@@ -128,15 +128,19 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
     onApprovalStatusChange(UserClubStatus.WAITING);
   };
 
+  const normalize = (str: string) =>
+    str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-
-    // **Filter users by input value**
+    const rawInput = e.target.value;
+    setInputValue(rawInput);
+  
+    const normalizedInput = normalize(rawInput);
+  
     const matches = users.filter(user =>
-      user.name.toLowerCase().includes(e.target.value.toLowerCase())
+      normalize(user.name).includes(normalizedInput)
     );
-
-    // **If only one name remains, auto-select it**
+  
     if (matches.length === 1) {
       setSelectedUser(matches[0]);
     } else {
