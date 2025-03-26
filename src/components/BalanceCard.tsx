@@ -5,6 +5,7 @@ import { FaRegCheckCircle } from "react-icons/fa";
 
 import { useWeb3Auth } from "../context/Web3AuthContext";
 import { QRCodeCanvas } from "qrcode.react";
+import neyxtLogo from "/NEYX_logo.svg";
 
 interface BalanceCardProps {
   walletAddress: string;
@@ -78,7 +79,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
   };
 
   return (
-    <div className="relative bg-gradient-to-r from-blue-700 to-blue-500 p-4 rounded-lg shadow-md">
+    <div className="relative bg-[#1e1e1e] p-4 rounded-xl shadow-md border border-[#ff8600]/20">
       {/* ✅ Address Section */}
       <div className="flex items-center justify-between text-sm text-gray-200">
         <span>{formattedAddress}</span>
@@ -97,15 +98,24 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
         </div>
       )}
 
-      {/* ✅ Balance (Static for now) */}
-      <div className="text-3xl font-bold mt-2">${getTotalBalanceUSD()} <span className="text-lg">USD</span></div>
+      {/* ✅ NEYXT Balance */}
+      <div className="flex items-center gap-4 mt-4">
+        <img src={neyxtLogo} alt="NEYXT" className="w-10 h-10 rounded-full" />
+        <div className="text-white">
+          <p className="text-sm text-orange-400">Your WNEYXT Balance</p>
+          <p className="text-xl font-bold text-white">{neyxtBalance.toFixed(2)} WNEYXT</p>
+        </div>
+      </div>
+
+
+
 
       {/* Actions */}
       <div className="flex justify-between mt-4 gap-3">
-        <button onClick={() => setShowSendForm(!showSendForm)} className="flex-1 border border-white bg-blue-600 px-4 py-2 rounded-lg text-white flex items-center justify-center">
+        <button onClick={() => setShowSendForm(!showSendForm)} className="flex-1 border border-[#ff8600] bg-[#ff8600]/80 px-4 py-2 rounded-lg text-white flex items-center justify-center hover:bg-[#ff8600] transition">
           <BsArrowUpRightCircle />
         </button>
-        <button onClick={() => setShowQR(true)} className="flex-1 border border-white bg-blue-600 px-4 py-2 rounded-lg text-white flex items-center justify-center">
+        <button onClick={() => setShowQR(true)} className="flex-1 border border-[#ff8600] bg-[#ff8600]/80 px-4 py-2 rounded-lg text-white flex items-center justify-center hover:bg-[#ff8600] transition">
           <BsArrowDownCircle /></button>
         {/* <button className="flex-1 border border-white bg-blue-600 px-4 py-2 rounded-lg text-white flex items-center justify-center">
           <BsArrowLeftRight /></button> */}
@@ -113,7 +123,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
 
       {/* QR Code Modal */}
       {showQR && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
           onClick={() => setShowQR(false)} // Close QR modal when clicking outside
         >
@@ -124,7 +134,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
             </div>
 
             <p className="text-gray-500 text-sm mt-2">{walletAddress}</p>
-            <button 
+            <button
               onClick={() => setShowQR(false)}
               className="mt-4 px-4 py-2 bg-red-500 text-white rounded-lg"
             >
@@ -163,8 +173,8 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
           />
 
           <div className="flex justify-between mt-4">
-          <button 
-              onClick={() => setShowSendForm(false)} 
+            <button
+              onClick={() => setShowSendForm(false)}
               className={loading ?
                 "border border-gray-500 text-gray-500 py-2 px-4 rounded-lg shadow-md"
                 :
@@ -173,10 +183,10 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
             >
               Cancel
             </button>
-            
-            <button 
-              onClick={handleSendTransaction} 
-              className="bg-blue-600 text-white py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition"
+
+            <button
+              onClick={handleSendTransaction}
+              className="bg-orange-400 text-white py-2 px-6 rounded-lg shadow-md hover:bg-blue-700 transition"
               disabled={loading}
             >
               {loading ? "Sending..." : "Confirm Send"}

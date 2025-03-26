@@ -28,7 +28,7 @@ const NFTList = () => {
 
     return (
         <div className="w-full">
-            <h2 className="text-lg font-semibold text-gray-300 mb-2">Your NFTs</h2>
+            <h2 className="text-lg font-semibold text-gray-300 my-4 text-center">Your NFTs</h2>
 
             {loading ? (
                 <p className="text-gray-400">Loading NFTs...</p>
@@ -54,7 +54,7 @@ const NFTList = () => {
                                             className="w-12 h-12 rounded-lg mr-4"
                                         />
                                         <div>
-                                            <p className="text-white font-medium">{nft.metadata.name}</p>
+                                            <p className="text-orange-300 font-medium">{nft.metadata.name}</p>
                                             <p className="text-gray-400 text-sm break-words whitespace-normal">{nft.metadata.description}</p>
                                         </div>
                                     </>
@@ -69,7 +69,7 @@ const NFTList = () => {
                                             />
                                         </div>
                                         <div className="p-4">
-                                            <p className="text-white font-medium text-lg">{nft.metadata.name}</p>
+                                            <p className="text-orange-300 font-medium text-lg">{nft.metadata.name}</p>
                                             <p className="text-gray-400 text-sm">{nft.metadata.description}</p>
                                         </div>
                                     </>

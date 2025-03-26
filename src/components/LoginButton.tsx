@@ -1,16 +1,29 @@
 import { useWeb3Auth } from "../context/Web3AuthContext";
+import { FaFingerprint } from "react-icons/fa";
 
 const LoginButton = () => {
   const { login } = useWeb3Auth();
 
   return (
-    <button 
-      onClick={login} 
-      className="w-full h-screen flex items-center justify-center bg-no-repeat bg-center bg-contain "
-      style={{ backgroundImage: `url('/WF_portail.jpg')` }}
-    >
-      <span className="sr-only">Login</span>
-    </button>
+    <div className="w-full h-screen bg-[#141414] flex items-center justify-center p-4">
+      <div className="flex flex-col items-center justify-center">
+        {/* Portal Image */}
+        <img
+          src="/WF_portail.jpg"
+          alt="WFounders Portal"
+          className="w-full max-w-md object-contain mb-8"
+        />
+
+        {/* Fingerprint Button */}
+        <button
+          onClick={login}
+          className="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 border border-orange-200 backdrop-blur-md flex items-center justify-center shadow-lg transition-all duration-300"
+        >
+          <FaFingerprint className="text-orange-400 text-2xl" />
+          <span className="sr-only">Login</span>
+        </button>
+      </div>
+    </div>
   );
 };
 

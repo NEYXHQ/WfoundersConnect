@@ -6,7 +6,7 @@ import NFTList from "./NFTList";
 import BottomNav from "./BottomNav";
 import { useWeb3Auth, chainConfig } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
-import { FaSpinner } from "react-icons/fa"; // ✅ Loading icon
+import { FaSpinner, FaRegCheckCircle } from "react-icons/fa"; // ✅ Loading icon
 
 
 import RPC from "../hooks/ethersRPC";
@@ -160,9 +160,6 @@ const WalletScreen = () => {
         <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
           {chainConfig.displayName}
         </div>
-        <div className="text-xs text-gray-500 text-right opacity-70 mt-2 mb-2">
-          Status : {approvalStatus}
-        </div>
 
         {/* Approval & Onboarding Section */}
         <div className="text-xs text-gray-400 text-right opacity-70 mt-2 mb-2">
@@ -172,7 +169,10 @@ const WalletScreen = () => {
               <p>Welcome to WFounders Club, minting your membership NFT...</p>
             </div>
           ) : approvalStatus === UserClubStatus.APPROVED ? (
-            <span className="text-green-400">✅ Approved</span>
+            <span className="text-orange-300 flex items-center justify-end gap-1">
+              <FaRegCheckCircle className="text-lg" />
+              Approved
+            </span>
           ) : (
             <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
               <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
@@ -197,7 +197,7 @@ const WalletScreen = () => {
         />
 
         {/* Toggle Buttons */}
-        <div className="flex justify-between my-4">
+        {/* <div className="flex justify-between my-4">
           <button
             onClick={() => setShowNFTs(false)}
             className={`flex-1 py-2 rounded-lg font-semibold ml-2 ${!showNFTs ? "bg-blue-600 text-white" : "bg-gray-700 text-gray-400"}`}
@@ -210,13 +210,16 @@ const WalletScreen = () => {
           >
             NFT
           </button>
-        </div>
+        </div> */}
 
         {/* Show Tokens or NFTs based on selection */}
-        {showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance} />}
+        {/*showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance} />*/}
+        {approvalStatus === UserClubStatus.APPROVED && (
+          <NFTList key={`nftlist-${approvalStatus}`} />
+        )}
 
         {/* Bottom Navigation */}
-        <BottomNav />
+        {/* <BottomNav /> */}
 
       </div>
 
