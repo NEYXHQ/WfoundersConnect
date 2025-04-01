@@ -154,6 +154,12 @@ const OracleApproveScreen = () => {
                             setStatus("❌ Approval cancelled");
                             setScannedUser(null);
                             setScannedAddress(null);
+
+                            // 🔥 Send "deny_user" WebSocket event
+                            wsRef.current?.send(JSON.stringify({
+                                event: "deny_user",
+                                address: scannedAddress,
+                            }));
                         }}
                         className={`flex items-center gap-2 text-sm text-white px-4 py-2 rounded-md transition-all
                             ${isMinting ? "bg-red-800 opacity-50 cursor-not-allowed" : "bg-red-800 hover:bg-red-700"}
