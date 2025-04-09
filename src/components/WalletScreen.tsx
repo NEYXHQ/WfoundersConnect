@@ -7,6 +7,7 @@ import BottomNav from "./BottomNav";
 import { useWeb3Auth, chainConfig } from "../context/Web3AuthContext";
 import { LuUserRoundCheck } from "react-icons/lu";
 import { FaSpinner, FaRegCheckCircle } from "react-icons/fa"; // ✅ Loading icon
+import ClaimNFT from "./ClaimNFT";
 
 
 import RPC from "../hooks/ethersRPC";
@@ -212,10 +213,14 @@ const WalletScreen = () => {
           </button>
         </div> */}
 
-        {/* Show Tokens or NFTs based on selection */}
-        {/*showNFTs ? <NFTList /> : <TokenList neyxtBalance={neyxtBalance} networkBalance={networkBalance} />*/}
+        {/* NFTList and clainNFT button */}
         {approvalStatus === UserClubStatus.APPROVED && (
-          <NFTList key={`nftlist-${approvalStatus}`} />
+          <>
+            <NFTList key={`nftlist-${approvalStatus}`} />
+            <div className="mt-6">
+              <ClaimNFT address={walletAddress ?? ""} />
+            </div>
+          </>
         )}
 
         {/* Bottom Navigation */}

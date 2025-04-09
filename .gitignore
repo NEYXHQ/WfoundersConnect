@@ -39,6 +39,7 @@ dist/
 
 # 🌐 Environment Variables  
 .env  
+.env.*
 .env.local  
 .env.*.local  
 

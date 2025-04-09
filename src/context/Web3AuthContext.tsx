@@ -6,37 +6,30 @@ import { Web3Auth, Web3AuthOptions } from "@web3auth/modal";
 import { getDefaultExternalAdapters } from "@web3auth/default-evm-adapter";
 
 
-const clientId = "BPYjbc75TRunCKQfGPUQ3794T-KzcR1toGj7mPxw4B4L6c4MxLZ_JMQoMOIbKlFtADx7xUl9TNR7ZMRvMqTe48M";
+
+
 
 export const chainConfig = {
   chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: "0x89", // Polygon Mainnet
-  rpcTarget: "https://rpc.ankr.com/polygon",
-  displayName: "Polygon Mainnet",
-  blockExplorerUrl: "https://polygonscan.com",
-  ticker: "POL",
-  tickerName: "Polygon Ecosystem Token",
-  logo: "https://cryptologos.cc/logos/polygon-matic-logo.png",
+  chainId: import.meta.env.VITE_CHAIN_ID,
+  rpcTarget: import.meta.env.VITE_RPC_TARGET,
+  displayName: import.meta.env.VITE_DISPLAY_NAME,
+  blockExplorerUrl: import.meta.env.VITE_BLOCK_EXPLORER_URL,
+  ticker: import.meta.env.VITE_TICKER,
+  tickerName: import.meta.env.VITE_TICKER_NAME,
+  logo: import.meta.env.VITE_LOGO,
 };
-
-// export const chainConfig = {
-//   chainNamespace: CHAIN_NAMESPACES.EIP155,
-//   chainId: "0x13882", // Polygon Amoy Testnet
-//   rpcTarget: "https://rpc.ankr.com/polygon_amoy",
-//   displayName: "Polygon Amoy Testnet",
-//   blockExplorerUrl: "https://amoy.polygonscan.com",
-//   ticker: "POL",
-//   tickerName: "Polygon Ecosystem Token",
-//   logo: "https://cryptologos.cc/logos/polygon-matic-logo.png",
-// };
 
 const privateKeyProvider = new EthereumPrivateKeyProvider({
   config: { chainConfig },
 });
 
+const clientId = import.meta.env.VITE_WEB3AUTH_CLIENTID
+const envNetwork = import.meta.env.VITE_WEB3AUTH_NETWORK?.toUpperCase(); 
+const selectedNetwork = WEB3AUTH_NETWORK[envNetwork as keyof typeof WEB3AUTH_NETWORK];
 const web3AuthOptions: Web3AuthOptions = {
   clientId,
-  web3AuthNetwork: WEB3AUTH_NETWORK.SAPPHIRE_DEVNET,
+  web3AuthNetwork: selectedNetwork,
   privateKeyProvider,
 };
 

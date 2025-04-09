@@ -16,7 +16,7 @@ const OracleApproveScreen = () => {
     const scannerRef = useRef<Html5Qrcode | null>(null);
 
     useEffect(() => {
-        const ws = new WebSocket("wss://wfounders.club/ws/");
+        const ws = new WebSocket(import.meta.env.VITE_WEBSOCKET_LINK);
         wsRef.current = ws;
 
         ws.onopen = () => console.log("✅ WebSocket connected");

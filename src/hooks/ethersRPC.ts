@@ -2,15 +2,18 @@
 import type { IProvider } from "@web3auth/base";
 import { ethers } from "ethers";
 
+// Dont forget the Web3AuthContext change
+
 // // NEYXT & NFT Contracts - PROD
-const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
-// const NFT_CONTRACT_ADDRESS = "0x5f200aB4e1aCa5cDABDA06dD8079f2EB63Dd01b4";
-const NFT_CONTRACT_ADDRESS = "0xE6C36094B8BFB325BA42A3448174e947a0f51E17"
+// const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
+// const NFT_CONTRACT_ADDRESS = "0xE6C36094B8BFB325BA42A3448174e947a0f51E17"
 
 
-// NEYXT & NFT Contracts - DEV
-// const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
-// const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
+// NEYXT & NFT Contracts - DEV (Amoy)
+const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
+const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
+const CLAIMABLE_NFT_CONTRACT = "0x7F76dE0EA12d38624EEC701009a5575Cb111fC92";
+
 
 // ERC20 ABI for balance
 const ERC20_ABI = ["function balanceOf(address owner) view returns (uint256)"];
@@ -169,12 +172,9 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     if (balance.toString() === "0") return [];
 
     const nfts = [];
-    // // PROD
-    console.log(`https://wfounders.club/api/metadata/${address}`);
-    const response = await fetch(`https://wfounders.club/api/metadata/${address}`);
-
-    // // DEV
-    // const response = await fetch(`https://wfounders.club/api/metadata/amoy/${address}`);
+    const NFT_DATA_LINK = import.meta.env.VITE_NFT_MEMBERSHIP_METADATA + address;
+    console.log(`Getting from : ${NFT_DATA_LINK}`);
+    const response = await fetch(NFT_DATA_LINK);
 
     if (!response.ok) throw new Error("No NFT found for this wallet.");
 
@@ -212,6 +212,67 @@ const mintMemberNFT = async (provider: IProvider, recipient: string, tokenId: nu
   }
 };
 
+const claimEventNFT = async (
+  provider: IProvider,
+  address: string,
+  tokenURI = "https://wfounders.club/api/claim/metadata.json",
+  eventId = 1
+): Promise<any> => {
+  try {
+    console.log("⏳ Starting NFT claim...");
+    console.log("📬 User address:", address);
+    console.log("🖼️ Token URI:", tokenURI);
+    console.log("📆 Event ID:", eventId);
+
+    const ethersProvider = new ethers.BrowserProvider(provider);
+    const signer = await ethersProvider.getSigner();
+    console.log("🔐 Signer address:", await signer.getAddress());
+
+    const contract = new ethers.Contract(
+      CLAIMABLE_NFT_CONTRACT,
+      ["function claimNFTWithSig(address,string,uint256,uint256,bytes)"],
+      signer
+    );
+    console.log("📄 Connected to contract at:", CLAIMABLE_NFT_CONTRACT);
+
+    const deadline = Math.floor(Date.now() / 1000) + 3600;
+    console.log("⏱️ Deadline (epoch seconds):", deadline);
+
+    // 🔄 Optional: get nonce from contract (if available)
+    let nonce = 0;
+    try {
+      nonce = await contract.nonces(address);
+      console.log("🔁 Nonce from contract:", nonce.toString());
+    } catch (e) {
+      console.warn("⚠️ Could not fetch nonce from contract. Using 0.");
+    }
+
+    const rawHash = ethers.solidityPackedKeccak256(
+      ["address", "string", "uint256", "uint256", "uint256"],
+      [address, tokenURI, deadline, eventId, nonce]
+    );
+    console.log("🧩 Raw keccak256 hash:", rawHash);
+
+    const signature = await signer.signMessage(ethers.getBytes(rawHash));
+    console.log("✍️ Signature:", signature);
+
+    console.log("🚀 Sending transaction...");
+    const tx = await contract.claimNFTWithSig(address, tokenURI, deadline, eventId, signature);
+    console.log("📨 Transaction sent. Waiting for confirmation...");
+    
+    const receipt = await tx.wait();
+    console.log("✅ Transaction confirmed! Hash:", receipt.hash);
+
+    return receipt;
+  } catch (error: any) {
+    console.error("❌ Error claiming NFT:", error.message || error);
+    if (error?.data) {
+      console.error("↩️ Error data:", error.data);
+    }
+    throw error;
+  }
+};
+
 export default {
   getChainId,
   getAccounts,
@@ -223,6 +284,7 @@ export default {
   sendToken,
   signMessage,
   mintMemberNFT, 
+  claimEventNFT,
 };
 
 // export default {getChainId, getAccounts, getBalance, sendTransaction, signMessage};

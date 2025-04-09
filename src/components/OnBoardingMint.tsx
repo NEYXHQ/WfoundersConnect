@@ -60,7 +60,7 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
     fetchUsers();
 
     console.log("🔵 Initializing WebSocket...");
-    const socket = new WebSocket("wss://wfounders.club/ws/");
+    const socket = new WebSocket(import.meta.env.VITE_WEBSOCKET_LINK);
 
     socket.onopen = () => {
       console.log("✅ WebSocket connected successfully!");
