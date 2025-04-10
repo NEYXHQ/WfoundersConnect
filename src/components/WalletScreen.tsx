@@ -46,9 +46,9 @@ const WalletScreen = () => {
         setWalletAddress(address);
 
         // Fetch balances
-        const neyxt = await RPC.getNEYXTBalance(provider);
+        const neyxtBalance = await RPC.getNEYXTBalance(provider);
         const network = await RPC.getNetworkBalance(provider);
-        setNeyxtBalance(parseFloat(neyxt));
+        setNeyxtBalance(parseFloat(neyxtBalance));
         setNetworkBalance(parseFloat(network));
 
         // Fetch token prices
@@ -82,7 +82,7 @@ const WalletScreen = () => {
       if (!walletAddress) return;
 
       try {
-        const response = await fetch(`https://wfounders.club/api/is-approved?address=${walletAddress}`);
+        const response = await fetch(`${import.meta.env.VITE_API_URL}is-approved?address=${walletAddress}`);
         const data = await response.json();
 
         setApprovalStatus(data.status);

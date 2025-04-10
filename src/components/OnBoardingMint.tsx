@@ -41,7 +41,7 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
 
     const fetchUsers = async () => {
       try {
-        const response = await fetch("https://wfounders.club/api/new-users");
+        const response = await fetch(`${import.meta.env.VITE_API_URL}new-users`);
 
         if (!response.ok) {
           throw new Error(`HTTP Error: ${response.status}`);

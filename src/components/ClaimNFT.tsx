@@ -23,7 +23,19 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address }) => {
       setSuccess(true);
     } catch (err) {
       setError("Claim failed. Ensure you have enough WNEYXT.");
-      console.log(`Error in handleClaim : ${err}`)
+      if (typeof err === "object" && err !== null && "message" in err) {
+        const errorMessage = (err as { message: string }).message;
+  
+        if (errorMessage.includes("User rejected token approval")) {
+          setError("Transaction cancelled. You must approve token usage to mint.");
+        } else if (errorMessage.includes("insufficient funds")) {
+          setError("Not enough WNEYXT tokens in your wallet.");
+        } else {
+          setError("Claim failed. Please try again.");
+        }
+      } else {
+        setError("An unexpected error occurred.");
+      }
     } finally {
       setLoading(false);
     }
