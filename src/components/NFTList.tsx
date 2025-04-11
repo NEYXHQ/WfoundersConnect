@@ -2,11 +2,18 @@ import { useEffect, useState } from "react";
 import { useWeb3Auth } from "../context/Web3AuthContext";
 import RPC from "../hooks/ethersRPC";
 
-const NFTList = () => {
+interface NFTListProps {
+    nfts: any[];
+    setNFTs: React.Dispatch<React.SetStateAction<any[]>>;
+    setNftsLoading: React.Dispatch<React.SetStateAction<boolean>>;
+  }
+
+
+const NFTList: React.FC<NFTListProps> = ({ nfts, setNFTs, setNftsLoading }) => {
     const { provider } = useWeb3Auth();
-    const [nfts, setNFTs] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
     const [expandedNFT, setExpandedNFT] = useState<number | null>(null);
+    const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
         const fetchNFTs = async () => {
@@ -16,18 +23,20 @@ const NFTList = () => {
             }
 
             try {
-                setLoading(true);
+                
                 const fetchedNFTs = await RPC.getNFTs(provider);
                 setNFTs(fetchedNFTs);
             } catch (error) {
                 console.error("Error fetching NFTs:", error);
             } finally {
+                setNftsLoading(false);
                 setLoading(false);
             }
         };
 
         fetchNFTs();
-    }, [provider]);
+    }, [provider, setNFTs]);
+  
 
     return (
         <div className="w-full">
@@ -41,6 +50,17 @@ const NFTList = () => {
                 <div className="space-y-4">
                     {nfts.map((nft, index) => {
                         const isExpanded = expandedNFT === index;
+                        const eventDateAttr = nft.metadata.attributes?.find(
+                            (attr: any) => attr.trait_type === "Formatted Date"
+                          );
+
+                          const formattedDate = eventDateAttr
+                          ? new Date(eventDateAttr.value).toLocaleDateString(undefined, {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric"
+                            })
+                          : null;
                         return (
                             <div
                                 key={index}
@@ -58,7 +78,12 @@ const NFTList = () => {
                                         />
                                         <div>
                                             <p className="text-orange-300 font-medium">{nft.metadata.name}</p>
-                                            <p className="text-gray-400 text-sm break-words whitespace-normal">{nft.metadata.description}</p>
+                                            <p className="text-gray-400 text-sm">
+                                              {nft.metadata.description}
+                                              {formattedDate && (
+                                                <span className="text-orange-200 italic text-xs"> - ({formattedDate})</span>
+                                              )}
+                                            </p>
                                         </div>
                                     </>
                                 ) : (
@@ -73,7 +98,12 @@ const NFTList = () => {
                                         </div>
                                         <div className="p-4">
                                             <p className="text-orange-300 font-medium text-lg">{nft.metadata.name}</p>
-                                            <p className="text-gray-400 text-sm">{nft.metadata.description}</p>
+                                            <p className="text-gray-400 text-sm">
+                                              {nft.metadata.description}
+                                              {formattedDate && (
+                                                <span className="text-orange-200 italic text-xs"> - ({formattedDate})</span>
+                                              )}
+                                            </p>
                                         </div>
                                     </>
                                 )}

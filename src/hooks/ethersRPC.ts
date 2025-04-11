@@ -21,6 +21,7 @@ const ERC20_ABI = [
   "function allowance(address owner, address spender) view returns (uint256)",
   "function approve(address spender, uint256 amount) returns (bool)",
   "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+  "function transfer(address to, uint256 amount) returns (bool)",
 ];
 const ERC721_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
@@ -167,38 +168,52 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
   }
 };
 
-// for now only fetches in NFT per address
 const getNFTs = async (provider: IProvider): Promise<any[]> => {
   try {
-    console.log(`Getting NFTS ...`);
+    console.log(`🔍 Getting all NFTs...`);
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
     const address = await signer.getAddress();
 
-    const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
-    const balance = await contract.balanceOf(address);
+    const allNFTs = [];
 
-    console.log(`Balance is : ${balance}`);
+    // Membership NFT
+    try {
+      const membershipContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
+      const membershipBalance = await membershipContract.balanceOf(address);
+      if (membershipBalance.toString() !== "0") {
+        const membershipMetadataUrl = `${import.meta.env.VITE_API_URL}metadata/${address}`;
+        console.log(`📦 Membership NFT: ${membershipMetadataUrl}`);
+        const res = await fetch(membershipMetadataUrl);
+        if (res.ok) {
+          const metadata = await res.json();
+          allNFTs.push({ type: "membership", metadata });
+        }
+      }
+    } catch (err) {
+      console.warn("❌ Error fetching membership NFT:", err);
+    }
 
-    if (balance.toString() === "0") return [];
+    // Event NFT (Claimable)
+    try {
+      const claimableContract = new ethers.Contract(CLAIMABLE_NFT_CONTRACT, ERC721_ABI, ethersProvider);
+      const claimableBalance = await claimableContract.balanceOf(address);
+      if (claimableBalance.toString() !== "0") {
+        const eventMetadataUrl = `${import.meta.env.VITE_API_URL}claim/metadata.json`; // or dynamic if needed
+        console.log(`📦 Event NFT: ${eventMetadataUrl}`);
+        const res = await fetch(eventMetadataUrl);
+        if (res.ok) {
+          const metadata = await res.json();
+          allNFTs.push({ type: "event", metadata });
+        }
+      }
+    } catch (err) {
+      console.warn("❌ Error fetching event NFT:", err);
+    }
 
-    const nfts = [];
-    const NFT_DATA_LINK = import.meta.env.VITE_API_URL + "metadata/" + address;
-    console.log(`Getting from : ${NFT_DATA_LINK}`);
-    const response = await fetch(NFT_DATA_LINK);
-
-    if (!response.ok) throw new Error("No NFT found for this wallet.");
-
-    const metadata = await response.json();
-
-    nfts.push({
-      metadata,
-    });
-
-
-    return nfts;
+    return allNFTs;
   } catch (error) {
-    console.error("Error fetching NFTs:", error);
+    console.error("❌ Error fetching NFTs:", error);
     return [];
   }
 };

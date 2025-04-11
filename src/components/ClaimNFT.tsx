@@ -6,9 +6,10 @@ import { FaRegCircleCheck } from "react-icons/fa6";
 
 interface ClaimNFTProps {
   address: string;
+  onClaimSuccess?: () => void;
 }
 
-const ClaimNFT: React.FC<ClaimNFTProps> = ({ address }) => {
+const ClaimNFT: React.FC<ClaimNFTProps> = ({ address, onClaimSuccess }) => {
   const { provider } = useWeb3Auth();
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -21,6 +22,8 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address }) => {
       const result = await RPC.claimEventNFT(provider as IProvider, address);
       console.log("✅ Claimed:", result);
       setSuccess(true);
+      onClaimSuccess?.();
+
     } catch (err) {
       setError("Claim failed. Ensure you have enough WNEYXT.");
       if (typeof err === "object" && err !== null && "message" in err) {
@@ -43,7 +46,7 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address }) => {
 
   return (
     <div className="bg-[#1a1f1c] p-4 rounded-xl border border-orange-500/30 text-center shadow-inner">
-      <p className="text-orange-300 mb-4">Mint your exclusive Event NFT</p>
+      <p className="text-orange-300 mb-4">Get your Banker's Bar NFT</p>
       <button
         onClick={handleClaim}
         disabled={loading || success}
@@ -55,10 +58,10 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address }) => {
       >
         {loading ? "Minting..." : success ? (
           <span className="flex items-center justify-center gap-2">
-            <FaRegCircleCheck /> NFT Claimed
+            <FaRegCircleCheck /> NFT Minted
           </span>
         ) : (
-          "Claim NFT"
+          "MINT"
         )}
       </button>
       {error && <p className="text-red-400 text-sm mt-2">{error}</p>}

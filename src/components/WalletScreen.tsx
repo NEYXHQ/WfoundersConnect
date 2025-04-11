@@ -9,7 +9,6 @@ import { LuUserRoundCheck } from "react-icons/lu";
 import { FaSpinner, FaRegCheckCircle } from "react-icons/fa"; // ✅ Loading icon
 import ClaimNFT from "./ClaimNFT";
 
-
 import RPC from "../hooks/ethersRPC";
 
 
@@ -18,12 +17,16 @@ const WalletScreen = () => {
   const { profileImage, verifierId } = userInfo;
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null); // 🔹 Reference for the menu
-  const [showNFTs, setShowNFTs] = useState(false);
 
   const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const [neyxtBalance, setNeyxtBalance] = useState<number>(0);
   const [networkBalance, setNetworkBalance] = useState<number>(0);
   const [prices, setPrices] = useState<{ [key: string]: string }>({});
+
+  const [nfts, setNFTs] = useState<any[]>([]);
+
+  const [statusLoading, setStatusLoading] = useState(true);
+  const [nftsLoading, setNftsLoading] = useState(true);
 
   enum UserClubStatus {
     UNAPPROVED = 0, // No wallet
@@ -32,8 +35,10 @@ const WalletScreen = () => {
     UNREGISTERED = 3, // No wallet and no name 
   }
 
+  const ONBOARDING_OPEN = false;
+
   const [approvalStatus, setApprovalStatus] = useState(UserClubStatus.APPROVED);
-  const [isOnboarding, setIsOnBoarding] = useState(false); // ✅ New state for NFT minting
+  const [isOnboarding, setIsOnBoarding] = useState(false); 
 
 
   useEffect(() => {
@@ -82,6 +87,7 @@ const WalletScreen = () => {
       if (!walletAddress) return;
 
       try {
+        setStatusLoading(true);
         const response = await fetch(`${import.meta.env.VITE_API_URL}is-approved?address=${walletAddress}`);
         const data = await response.json();
 
@@ -90,6 +96,8 @@ const WalletScreen = () => {
 
       } catch (error) {
         console.error("Error checking user approval:", error);
+      } finally {
+        setStatusLoading(false);
       }
     };
 
@@ -112,7 +120,11 @@ const WalletScreen = () => {
           <div className="relative flex items-center space-x-2">
             {/* Verifier ID (email) */}
             {verifierId && (
-              <span className="text-xs text-gray-400 truncate">{verifierId}</span>
+              <span className="text-xs text-gray-400">
+                {verifierId.length > 23
+                  ? `${verifierId.slice(0, 10)}...${verifierId.slice(-10)}`
+                  : verifierId}
+              </span>
             )}
 
             {/* Profile Picture / Initials */}
@@ -164,7 +176,7 @@ const WalletScreen = () => {
 
         {/* Approval & Onboarding Section */}
         <div className="text-xs text-gray-400 text-right opacity-70 mt-2 mb-2">
-          {isOnboarding ? (
+          {!statusLoading && isOnboarding ? (
             <div className="bg-green-700 p-4 rounded-lg shadow-lg text-white flex items-center justify-center space-x-2">
               <FaSpinner className="animate-spin text-white text-lg" />
               <p>Welcome to WFounders Club, minting your membership NFT...</p>
@@ -174,7 +186,7 @@ const WalletScreen = () => {
               <FaRegCheckCircle className="text-lg" />
               Approved
             </span>
-          ) : (
+          ) : ONBOARDING_OPEN ? (
             <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
               <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
               <OnBoardingMint
@@ -185,6 +197,13 @@ const WalletScreen = () => {
                 onIsOnBoardingChange={(isOnBoardingChange: boolean) => setIsOnBoarding(isOnboarding)}
               />
             </div>
+          ) : (
+            <p className="text-center text-lg text-orange-200 font-medium mt-6">
+              You are not onboarded yet <br/>
+              😔<br />
+              We only onboard during our live events<br />
+              See you then (May 9th 🤩)! 
+            </p>
           )}
         </div>
 
@@ -215,13 +234,18 @@ const WalletScreen = () => {
 
         {/* NFTList and clainNFT button */}
         {approvalStatus === UserClubStatus.APPROVED && (
-          <>
-            <NFTList key={`nftlist-${approvalStatus}`} />
+        <>
+          <NFTList nfts={nfts} setNFTs={setNFTs} setNftsLoading={setNftsLoading} />
+
+          {!nftsLoading && nfts.length === 1 && ( // hardcoded to 1 because only those who where at bankers bar have claimed their membership NFT
             <div className="mt-6">
-              <ClaimNFT address={walletAddress ?? ""} />
+              <ClaimNFT address={walletAddress ?? ""} onClaimSuccess={() => {
+                RPC.getNFTs(provider!).then(setNFTs);
+              }} />
             </div>
-          </>
-        )}
+          )}
+        </>
+      )}
 
         {/* Bottom Navigation */}
         {/* <BottomNav /> */}

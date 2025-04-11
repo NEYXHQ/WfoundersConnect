@@ -6,6 +6,8 @@ import { FaRegCheckCircle } from "react-icons/fa";
 import { useWeb3Auth } from "../context/Web3AuthContext";
 import { QRCodeCanvas } from "qrcode.react";
 import neyxtLogo from "/NEYX_logo.svg";
+import RPC from "../hooks/ethersRPC";
+import { env } from "process";
 
 interface BalanceCardProps {
   walletAddress: string;
@@ -28,6 +30,8 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
 
   const [showQR, setShowQR] = useState(false);
 
+  const { provider } = useWeb3Auth();
+
 
   const getTotalBalanceUSD = () => {
     const neyxtPrice = parseFloat(prices["0xYourNEYXTTokenAddress"] || "0");
@@ -37,26 +41,44 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
   };
 
   const handleSendTransaction = async () => {
-    // if (!provider || !recipient || !amount) return;
+
+    if (!provider || !recipient || !amount) return;
 
     setLoading(true);
 
     try {
-      let txReceipt = "0xfc8a62671f141be3972a15a2eebb671dd9b0cfcc8ee01a683c6f4de7f389c8b0";
-      // if (token === "POL") {
-      //   txReceipt = await RPC.sendTransaction(provider, recipient, amount);
-      // } else {
-      //   txReceipt = await RPC.sendToken(provider, recipient, amount);
-      // }
+      let txReceipt;
+      if (token === "POL") {
+        txReceipt = await RPC.sendTransaction(provider, recipient, amount);
+      } else {
+        txReceipt = await RPC.sendToken(provider, recipient, amount);
+      }
 
-      // setTxHash(txReceipt.hash);
-      setTxHash(txReceipt);
+      const hash = txReceipt?.hash ?? txReceipt; // fallback if txReceipt is already a string
+      setTxHash(hash);
+      
       setShowSuccess(true);
       // Auto-hide success message after 5 seconds
       setTimeout(() => setShowSuccess(false), 5000);
 
-    } catch (error) {
-      console.error("❌ Error:", error);
+    } catch (error: unknown) {
+      let errorMessage = "Transaction failed. Please try again.";
+    
+      if (error && typeof error === "object" && "message" in error) {
+        const errMsg = (error as { message: string }).message.toLowerCase();
+    
+        if (errMsg.includes("insufficient funds")) {
+          errorMessage = "Not enough balance to cover transaction fees.";
+        } else if (errMsg.includes("invalid address")) {
+          errorMessage = "Invalid recipient address.";
+        } else if (errMsg.includes("user rejected transaction")) {
+          errorMessage = "Transaction rejected by user.";
+        }
+      } else {
+        console.error("❌ Unknown error:", error);
+      }
+    
+      alert(errorMessage);
     } finally {
       setLoading(false);
       setShowSendForm(false); // Hide the form after sending
@@ -210,7 +232,7 @@ const BalanceCard: React.FC<BalanceCardProps> = ({ walletAddress, neyxtBalance, 
           {/* TxHash Label & Link (Separate Line) */}
           <p className="text-gray-400 mt-1">TxHash:</p>
           <a
-            href={`https://polygonscan.com/tx/${txHash}`}
+            href={provider.chainConfig.blockExplorerUrl + "tx/" + txHash}
             target="_blank"
             rel="noopener noreferrer"
             className="text-blue-400 underline font-medium hover:text-blue-300 block mt-1"

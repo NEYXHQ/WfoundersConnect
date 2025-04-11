@@ -1,5 +1,5 @@
 import { useWeb3Auth } from "../context/Web3AuthContext";
-import { FaFingerprint } from "react-icons/fa";
+import { IoPowerOutline } from "react-icons/io5";
 
 const LoginButton = () => {
   const { login } = useWeb3Auth();
@@ -19,7 +19,7 @@ const LoginButton = () => {
           onClick={login}
           className="w-16 h-16 rounded-full bg-white/10 hover:bg-white/20 border border-orange-200 backdrop-blur-md flex items-center justify-center shadow-lg transition-all duration-300"
         >
-          <FaFingerprint className="text-orange-400 text-2xl" />
+          <IoPowerOutline className="text-orange-400 text-2xl" />
           <span className="sr-only">Login</span>
         </button>
       </div>
