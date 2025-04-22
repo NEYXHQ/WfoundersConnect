@@ -7,7 +7,7 @@ import { useWeb3Auth } from "../context/Web3AuthContext";
 import { QRCodeCanvas } from "qrcode.react";
 import neyxtLogo from "/NEYX_logo.svg";
 import RPC from "../hooks/ethersRPC";
-import { env } from "process";
+
 
 interface BalanceCardProps {
   walletAddress: string;

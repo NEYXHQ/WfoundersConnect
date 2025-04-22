@@ -1,24 +1,23 @@
 // src/context/Web3AuthContext.tsx
 import { createContext, useContext, useEffect, useState } from "react";
-import { CHAIN_NAMESPACES, IAdapter, IProvider, WEB3AUTH_NETWORK } from "@web3auth/base";
+import { CHAIN_NAMESPACES, IAdapter, IProvider, WEB3AUTH_NETWORK, getEvmChainConfig } from "@web3auth/base";
 import { EthereumPrivateKeyProvider } from "@web3auth/ethereum-provider";
 import { Web3Auth, Web3AuthOptions } from "@web3auth/modal";
 import { getDefaultExternalAdapters } from "@web3auth/default-evm-adapter";
 
 
+export const chainConfig = getEvmChainConfig(Number(import.meta.env.VITE_CHAIN_ID), import.meta.env.VITE_WEB3AUTH_CLIENTID)!;
 
-
-
-export const chainConfig = {
-  chainNamespace: CHAIN_NAMESPACES.EIP155,
-  chainId: import.meta.env.VITE_CHAIN_ID,
-  rpcTarget: import.meta.env.VITE_RPC_TARGET,
-  displayName: import.meta.env.VITE_DISPLAY_NAME,
-  blockExplorerUrl: import.meta.env.VITE_BLOCK_EXPLORER_URL,
-  ticker: import.meta.env.VITE_TICKER,
-  tickerName: import.meta.env.VITE_TICKER_NAME,
-  logo: import.meta.env.VITE_LOGO,
-};
+// {
+//   chainNamespace: CHAIN_NAMESPACES.EIP155,
+//   chainId: import.meta.env.VITE_CHAIN_ID,
+//   rpcTarget: import.meta.env.VITE_RPC_TARGET,
+//   displayName: import.meta.env.VITE_DISPLAY_NAME,
+//   blockExplorerUrl: import.meta.env.VITE_BLOCK_EXPLORER_URL,
+//   ticker: import.meta.env.VITE_TICKER,
+//   tickerName: import.meta.env.VITE_TICKER_NAME,
+//   logo: import.meta.env.VITE_LOGO,
+// };
 
 const privateKeyProvider = new EthereumPrivateKeyProvider({
   config: { chainConfig },
@@ -34,6 +33,12 @@ const web3AuthOptions: Web3AuthOptions = {
 };
 
 const web3auth = new Web3Auth(web3AuthOptions);
+
+console.table({
+  MODE: import.meta.env.MODE,
+  CLIENT_ID: import.meta.env.VITE_WEB3AUTH_CLIENT_ID,
+  NETWORK: import.meta.env.VITE_WEB3AUTH_NETWORK,
+});
 
 // IMP START - Configuring External Wallets
 const adapters = await getDefaultExternalAdapters({ options: web3AuthOptions });
@@ -53,6 +58,7 @@ export const Web3AuthProvider = ({ children }: { children: React.ReactNode }) =>
   });
 
   useEffect(() => {
+    console.log(`chain ID : ${import.meta.env.VITE_CHAIN_ID}`)
     const init = async () => {
       try {
         await web3auth.initModal();

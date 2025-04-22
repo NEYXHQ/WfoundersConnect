@@ -202,7 +202,7 @@ const WalletScreen = () => {
               You are not onboarded yet <br/>
               😔<br />
               We only onboard during our live events<br />
-              See you then (May 9th 🤩)! 
+              See you then ({import.meta.env.VITE_NEXT_EVENT})! 
             </p>
           )}
         </div>

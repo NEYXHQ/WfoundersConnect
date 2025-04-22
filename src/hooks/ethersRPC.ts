@@ -4,17 +4,6 @@ import { ethers } from "ethers";
 
 // Dont forget the Web3AuthContext change
 
-// // NEYXT & NFT Contracts - PROD
-// const NEYXT_CONTRACT_ADDRESS = "0x86b8B002ff72Be60C63E9Ae716348EDC1771F52e";
-// const NFT_CONTRACT_ADDRESS = "0xE6C36094B8BFB325BA42A3448174e947a0f51E17"
-
-
-// NEYXT & NFT Contracts - DEV (Amoy)
-const NEYXT_CONTRACT_ADDRESS = "0x5911FF908512f9CAC1FC8727dDBfca208F164814";
-const NFT_CONTRACT_ADDRESS = "0x19fB0271e0F0380645b15C409e43e92F8774b5F1";
-const CLAIMABLE_NFT_CONTRACT = "0x7F76dE0EA12d38624EEC701009a5575Cb111fC92";
-
-
 // ERC20 ABI for balance
 const ERC20_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
@@ -106,7 +95,7 @@ const sendToken = async (provider: IProvider, recipient: string, amount: string)
   try {
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
-    const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
+    const contract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
 
     const decimals = 18; // Adjust based on NEYXT token decimals
     const parsedAmount = ethers.parseUnits(amount, decimals);
@@ -157,10 +146,10 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
     const ethersProvider = new ethers.BrowserProvider(provider);
     const address = await getAccounts(provider);
 
-    const contract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
+    const contract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
 
-    console.log(`balance = ${ethers.formatUnits(balance, 18)} for contract ${NEYXT_CONTRACT_ADDRESS}`)
+    console.log(`balance = ${ethers.formatUnits(balance, 18)} for contract ${import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS}`)
 
     return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
   } catch (error) {
@@ -179,7 +168,8 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
 
     // Membership NFT
     try {
-      const membershipContract = new ethers.Contract(NFT_CONTRACT_ADDRESS, ERC721_ABI, ethersProvider);
+      const membershipContract = new ethers.Contract(import.meta.env.VITE_NFT_MEMBERSHIP_ADDRESS, ERC721_ABI, ethersProvider);
+
       const membershipBalance = await membershipContract.balanceOf(address);
       if (membershipBalance.toString() !== "0") {
         const membershipMetadataUrl = `${import.meta.env.VITE_API_URL}metadata/${address}`;
@@ -196,7 +186,7 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
 
     // Event NFT (Claimable)
     try {
-      const claimableContract = new ethers.Contract(CLAIMABLE_NFT_CONTRACT, ERC721_ABI, ethersProvider);
+      const claimableContract = new ethers.Contract(import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT, ERC721_ABI, ethersProvider);
       const claimableBalance = await claimableContract.balanceOf(address);
       if (claimableBalance.toString() !== "0") {
         const eventMetadataUrl = `${import.meta.env.VITE_API_URL}claim/metadata.json`; // or dynamic if needed
@@ -223,7 +213,7 @@ const mintMemberNFT = async (provider: IProvider, recipient: string, tokenId: nu
     const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
 
-    const contract = new ethers.Contract(NFT_CONTRACT_ADDRESS, [
+    const contract = new ethers.Contract(import.meta.env.VITE_NFT_MEMBERSHIP_ADDRESS, [
       "function safeMint(address to, uint256 tokenId) public",
     ], signer);
 
@@ -245,7 +235,7 @@ const ensureApproval = async (
   amount: bigint
 ): Promise<boolean> => {
   try {
-    const wnextContract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
+    const wnextContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
 
     const currentAllowance = await wnextContract.allowance(userAddress, spenderAddress);
     console.log("💰 Current allowance:", currentAllowance.toString());
@@ -278,8 +268,8 @@ const claimEventNFT = async (
   try {
 
     const ethersProvider = new ethers.BrowserProvider(provider);
-    const wnextContract = new ethers.Contract(NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
-    const allowance = await wnextContract.allowance(address, CLAIMABLE_NFT_CONTRACT);
+    const wnextContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
+    const allowance = await wnextContract.allowance(address, import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT);
     const balance = await wnextContract.balanceOf(address);
     
     console.log("💰 Allowance:", allowance.toString());
@@ -295,16 +285,16 @@ const claimEventNFT = async (
     console.log("🔐 Signer address:", await signer.getAddress());
 
     const contract = new ethers.Contract(
-      CLAIMABLE_NFT_CONTRACT,
+      import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT,
       ERC721_ABI,
       signer
     );
-    console.log("📄 Connected to contract at:", CLAIMABLE_NFT_CONTRACT);
+    console.log("📄 Connected to contract at:", import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT);
 
     console.log("Checking approval ?");
     const nftPrice = await contract.nftPrice();
     console.log("🏷️ NFT Price:", nftPrice);
-    const approved = await ensureApproval(signer, address, CLAIMABLE_NFT_CONTRACT, nftPrice);
+    const approved = await ensureApproval(signer, address, import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT, nftPrice);
 
     if (!approved) {
       throw new Error("User rejected token approval. Cannot proceed with claim.");
