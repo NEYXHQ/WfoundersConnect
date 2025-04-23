@@ -16,7 +16,7 @@ const ERC721_ABI = [
   "function balanceOf(address owner) view returns (uint256)",
   "function tokenOfOwnerByIndex(address owner, uint256 index) view returns (uint256)",
   "function tokenURI(uint256 tokenId) view returns (string)",
-  "function claimNFTWithSig(address,string,uint256,uint256,bytes)",
+  "function claimNFTWithSig(address user, string tokenURI_, uint256 deadline, uint256 eventId, bytes signature)",
   "function nonces(address) view returns (uint256)",
   "function nftPrice() view returns (uint256)"
 ];
@@ -184,17 +184,23 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
       console.warn("❌ Error fetching membership NFT:", err);
     }
 
+    console.log(`Fetching Event NFT`);
     // Event NFT (Claimable)
     try {
       const claimableContract = new ethers.Contract(import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT, ERC721_ABI, ethersProvider);
       const claimableBalance = await claimableContract.balanceOf(address);
-      if (claimableBalance.toString() !== "0") {
-        const eventMetadataUrl = `${import.meta.env.VITE_API_URL}claim/metadata.json`; // or dynamic if needed
-        console.log(`📦 Event NFT: ${eventMetadataUrl}`);
-        const res = await fetch(eventMetadataUrl);
+      console.log(`Claimable balance : ${claimableBalance}`);
+      for (let i = 0; i < claimableBalance; i++) {
+        console.log(`iteration : ${i}`);
+        const tokenId = await claimableContract.tokenOfOwnerByIndex(address, i);
+        console.log(`Token id : ${tokenId}`);
+        const tokenURI = await claimableContract.tokenURI(tokenId);
+        console.log(`📦 Event NFT [${tokenId}]: ${tokenURI}`);
+
+        const res = await fetch(tokenURI);
         if (res.ok) {
           const metadata = await res.json();
-          allNFTs.push({ type: "event", metadata });
+          allNFTs.push({ type: "event", tokenId: tokenId.toString(), metadata });
         }
       }
     } catch (err) {
@@ -243,14 +249,14 @@ const ensureApproval = async (
     if (currentAllowance >= amount) {
       return true; // already approved
     }
-    
+
     console.log("🛂 Not enough allowance. Requesting approval...");
 
-    const tx = await wnextContract.approve(spenderAddress, amount *10n);
+    const tx = await wnextContract.approve(spenderAddress, amount * 10n);
     console.log("⏳ Waiting for approval tx...");
-    
+
     await tx.wait();
-    
+
     console.log("✅ Approval successful.");
     return true;
   } catch (err: any) {
@@ -259,11 +265,13 @@ const ensureApproval = async (
   }
 };
 
+// tokenId = (eventId << 64) | attendeeIndex
+// Ensures uniqueness per user and event
 const claimEventNFT = async (
   provider: IProvider,
   address: string,
-  tokenURI = `${import.meta.env.VITE_API_URL}claim/metadata.json`,
-  eventId = 1
+  tokenURI = `${import.meta.env.VITE_API_URL}claim/metadata.json?uri=${import.meta.env.VITE_CLAIMABLE_EVENT_ID}`,
+  eventId = import.meta.env.VITE_CLAIMABLE_EVENT_ID
 ): Promise<any> => {
   try {
 
@@ -271,14 +279,6 @@ const claimEventNFT = async (
     const wnextContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
     const allowance = await wnextContract.allowance(address, import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT);
     const balance = await wnextContract.balanceOf(address);
-    
-    console.log("💰 Allowance:", allowance.toString());
-    console.log("💰 Balance:", balance.toString());
-
-    console.log("⏳ Starting NFT claim...");
-    console.log("📬 User address:", address);
-    console.log("🖼️ Token URI:", tokenURI);
-    console.log("📆 Event ID:", eventId);
 
     // const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
@@ -300,46 +300,37 @@ const claimEventNFT = async (
       throw new Error("User rejected token approval. Cannot proceed with claim.");
     }
 
-
     const deadline = Math.floor(Date.now() / 1000) + 3600;
     console.log("⏱️ Deadline (epoch seconds):", deadline);
 
-    // 🔄 Optional: get nonce from contract (if available)
-    let nonce = 0;
-    try {
-      nonce = await contract.nonces(address);
-      console.log("🔁 Nonce from contract:", nonce.toString());
-    } catch (e) {
-      console.warn("⚠️ Could not fetch nonce from contract. Using 0.");
-    }
+    const nonce = await contract.nonces(address);
 
     const rawHash = ethers.solidityPackedKeccak256(
       ["address", "string", "uint256", "uint256", "uint256"],
       [address, tokenURI, deadline, eventId, nonce]
     );
-    console.log("🧩 Raw keccak256 hash:", rawHash);
 
     const signature = await signer.signMessage(ethers.getBytes(rawHash));
-    console.log("✍️ Signature:", signature);
 
+    // https://wfounders.club/api/dev/
     const response = await fetch(`${import.meta.env.VITE_API_URL}claimNFT`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        address,
-        tokenURI,
+        user: address,
+        tokenURI_: tokenURI,
         deadline: deadline.toString(),
         eventId,
-        nonce: nonce.toString(),  
+        nonce: nonce.toString(),
         signature,
       }),
     });
-    
+
     const result = await response.json();
     console.log("📨 Backend response:", result);
-    
+
     return result;
   } catch (error: any) {
     console.error("❌ Error claiming NFT:", error.message || error);
