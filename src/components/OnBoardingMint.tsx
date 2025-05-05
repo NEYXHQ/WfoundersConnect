@@ -12,6 +12,7 @@ enum UserClubStatus {
 
 interface OnBoardingMintProps {
   address: string;
+  verifierId: string;
   approvalStatus: UserClubStatus;
   onApprovalStatusChange: (status: UserClubStatus) => void;
   isOnBoarding: boolean;
@@ -20,24 +21,26 @@ interface OnBoardingMintProps {
 
 const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
   address,
+  verifierId,
   approvalStatus,
   onApprovalStatusChange,
   isOnBoarding,
   onIsOnBoardingChange
 }) => {
 
-  const [users, setUsers] = useState<{ name: string; email: string; address: string }[]>([]);
+  const [users, setUsers] = useState<{ name: string; verifierId: String; email: string; address: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [approvalMessage, setApprovalMessage] = useState<string | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [inputValue, setInputValue] = useState(""); // ✅ Input field value
-  const [selectedUser, setSelectedUser] = useState<{ name: string; email: string; address: string } | null>(null);
+  const [selectedUser, setSelectedUser] = useState<{ name: string; verifierId: String; email: string; address: string } | null>(null);
   const [txHash, setTxHash] = useState<string | null>(null);
   const [displayQR, setDisplayQR]  = useState<boolean | null>(null);
 
   useEffect(() => {
     console.log("OnBoardMint is rendering...");
+    console.log(" VerifierID = ", verifierId);
 
     const fetchUsers = async () => {
       try {
@@ -114,12 +117,14 @@ const OnBoardingMint: React.FC<OnBoardingMintProps> = ({
   const handleUserApprovalRequest = () => {
     if (!selectedUser || !ws || ws.readyState !== WebSocket.OPEN) return;
 
+    console.log(`VerifierID = ${verifierId}`);
+
     ws.send(
       JSON.stringify({
         event: "waiting_for_approval",
         new_address: address,
         name: selectedUser.name,
-        email: selectedUser.email,
+        email: verifierId,
         address: selectedUser.address,
       })
     );

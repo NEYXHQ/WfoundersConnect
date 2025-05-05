@@ -189,6 +189,7 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     try {
       const claimableContract = new ethers.Contract(import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT, ERC721_ABI, ethersProvider);
       const claimableBalance = await claimableContract.balanceOf(address);
+      console.log(`NFT Claim address = ${import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT}`);
       console.log(`Claimable balance : ${claimableBalance}`);
       for (let i = 0; i < claimableBalance; i++) {
         console.log(`iteration : ${i}`);
@@ -241,9 +242,9 @@ const ensureApproval = async (
   amount: bigint
 ): Promise<boolean> => {
   try {
-    const wnextContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
+    const wNEYXTContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, signer);
 
-    const currentAllowance = await wnextContract.allowance(userAddress, spenderAddress);
+    const currentAllowance = await wNEYXTContract.allowance(userAddress, spenderAddress);
     console.log("💰 Current allowance:", currentAllowance.toString());
 
     if (currentAllowance >= amount) {
@@ -252,7 +253,7 @@ const ensureApproval = async (
 
     console.log("🛂 Not enough allowance. Requesting approval...");
 
-    const tx = await wnextContract.approve(spenderAddress, amount * 10n);
+    const tx = await wNEYXTContract.approve(spenderAddress, amount * 10n);
     console.log("⏳ Waiting for approval tx...");
 
     await tx.wait();
@@ -276,9 +277,9 @@ const claimEventNFT = async (
   try {
 
     const ethersProvider = new ethers.BrowserProvider(provider);
-    const wnextContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
-    const allowance = await wnextContract.allowance(address, import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT);
-    const balance = await wnextContract.balanceOf(address);
+    const wNEYXTContract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
+    const allowance = await wNEYXTContract.allowance(address, import.meta.env.VITE_CLAIMABLE_NFT_CONTRACT);
+    const balance = await wNEYXTContract.balanceOf(address);
 
     // const ethersProvider = new ethers.BrowserProvider(provider);
     const signer = await ethersProvider.getSigner();
@@ -312,7 +313,10 @@ const claimEventNFT = async (
 
     const signature = await signer.signMessage(ethers.getBytes(rawHash));
 
+    
+
     // https://wfounders.club/api/dev/
+    console.log("API call on : ",import.meta.env.VITE_API_URL);
     const response = await fetch(`${import.meta.env.VITE_API_URL}claimNFT`, {
       method: "POST",
       headers: {
@@ -331,7 +335,15 @@ const claimEventNFT = async (
     const result = await response.json();
     console.log("📨 Backend response:", result);
 
+    // Check for HTTP errors
+    if (!response.ok || result.status !== "success") {
+      const errorMessage = result.message || "Unknown backend error";
+      console.error("❌ Backend rejected the claim:", errorMessage);
+      throw new Error(errorMessage);
+    }
+
     return result;
+
   } catch (error: any) {
     console.error("❌ Error claiming NFT:", error.message || error);
     if (error?.data) {

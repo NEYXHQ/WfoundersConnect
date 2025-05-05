@@ -35,13 +35,14 @@ const WalletScreen = () => {
     UNREGISTERED = 3, // No wallet and no name 
   }
 
-  const ONBOARDING_OPEN = false;
+  const ONBOARDING_OPEN = import.meta.env.VITE_ONBOARDING_OPEN === "true" ? true : false;
 
   const [approvalStatus, setApprovalStatus] = useState(UserClubStatus.APPROVED);
   const [isOnboarding, setIsOnBoarding] = useState(false); 
 
 
   useEffect(() => {
+    console.log("Onboarding open ? ",ONBOARDING_OPEN);
     const fetchBalancesAndPrices = async () => {
       if (!provider) return;
 
@@ -191,6 +192,7 @@ const WalletScreen = () => {
               <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
               <OnBoardingMint
                 address={walletAddress ?? ""}
+                verifierId={verifierId}
                 approvalStatus={approvalStatus} // ✅ Pass initial status
                 onApprovalStatusChange={(newStatus: UserClubStatus) => setApprovalStatus(newStatus)}
                 isOnBoarding={isOnboarding}

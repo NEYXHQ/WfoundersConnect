@@ -25,21 +25,8 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address, onClaimSuccess }) => {
       onClaimSuccess?.();
 
     } catch (err) {
-      setError("Claim failed. Ensure you have enough WNEYXT.");
-      if (typeof err === "object" && err !== null && "message" in err) {
-        const errorMessage = (err as { message: string }).message;
-  
-        if (errorMessage.includes("User rejected token approval")) {
-          setError("Transaction cancelled. You must approve token usage to mint.");
-        } else if (errorMessage.includes("insufficient funds")) {
-          setError("Not enough WNEYXT tokens in your wallet.");
-        } else {
-          setError("Claim failed. Please try again.");
-        }
-      } else {
-        setError("An unexpected error occurred.");
-      }
-    } finally {
+      const msg = typeof err === "object" && err !== null && "message" in err ? (err as { message: string }).message : "Claim failed.";
+      setError(msg);
       setLoading(false);
     }
   };
@@ -50,21 +37,25 @@ const ClaimNFT: React.FC<ClaimNFTProps> = ({ address, onClaimSuccess }) => {
       <button
         onClick={handleClaim}
         disabled={loading || success}
-        className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${
-          success
+        className={`w-full py-2 px-4 rounded-lg font-semibold transition-all ${success
             ? "bg-green-700 text-white"
             : "bg-orange-500 hover:bg-orange-400 text-white"
-        }`}
+          }`}
       >
         {loading ? "Minting..." : success ? (
           <span className="flex items-center justify-center gap-2">
             <FaRegCircleCheck /> NFT Minted
           </span>
+        ) : error ? (
+          <div className="flex flex-col items-center gap-1 text-red-600">
+            <strong>MINT Error</strong>
+          </div>
         ) : (
-          "MINT"
+          <>
+            MINT <span className="text-sm">(cost : 1000 NEYXT)</span>
+          </>
         )}
       </button>
-      {error && <p className="text-red-400 text-sm mt-2">{error}</p>}
     </div>
   );
 };
