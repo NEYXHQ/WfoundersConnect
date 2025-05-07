@@ -149,7 +149,7 @@ const getNEYXTBalance = async (provider: IProvider): Promise<string> => {
     const contract = new ethers.Contract(import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS, ERC20_ABI, ethersProvider);
     const balance = await contract.balanceOf(address);
 
-    console.log(`balance = ${ethers.formatUnits(balance, 18)} for contract ${import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS}`)
+    console.log(`balance = ${ethers.formatUnits(balance, 18)} for NEYXT contract ${import.meta.env.VITE_NEYXT_CONTRACT_ADDRESS}`)
 
     return ethers.formatUnits(balance, 18); // Adjust decimals based on token config
   } catch (error) {
@@ -169,7 +169,7 @@ const getNFTs = async (provider: IProvider): Promise<any[]> => {
     // Membership NFT
     try {
       const membershipContract = new ethers.Contract(import.meta.env.VITE_NFT_MEMBERSHIP_ADDRESS, ERC721_ABI, ethersProvider);
-
+      console.log(`Membership contract : ${membershipContract.target}`);
       const membershipBalance = await membershipContract.balanceOf(address);
       if (membershipBalance.toString() !== "0") {
         const membershipMetadataUrl = `${import.meta.env.VITE_API_URL}metadata/${address}`;

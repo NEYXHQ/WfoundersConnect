@@ -28,6 +28,21 @@ const WalletScreen = () => {
   const [statusLoading, setStatusLoading] = useState(true);
   const [nftsLoading, setNftsLoading] = useState(true);
 
+  const ALLOWED_ADDRESSES_CLAIM = [
+    // "0xe6005AF5C11d13e6c8DA19672AEBB7f043f63F3B", // Steph Phone #10
+    "0xffdd175FF06b54D0C845059C63f7124BD603755f",
+    "0x637246DBFc706caD0E8A59838Dc1dc3A39f618Ef",
+    "0x7338B7Ecf49514270f4A3f05D4696947Ee4F730A",
+    "0x518Ed219200d04d6a715805864Dab5614baC7732",
+    "0x85D582f33e303747CCbC0B362C7E90A0cC9a3887",
+    "0x4Ca4808767497f24D88C6EF5B0f835a3BB2CdFDE",
+    "0x1D7De1a2a02B55D0B179Bdae9365c801b6b7ca4C",
+    "0x372554f4C89D095a0F5E630e40FA22F3F4cE1Bd9",
+    "0x7d25D0565fCef91F156D840D5879fB47f53732C2"
+  ].map(addr => addr.toLowerCase());
+
+  // console.log(`Allowed addresses to claim : ${ALLOWED_ADDRESSES_CLAIM}`);
+
   enum UserClubStatus {
     UNAPPROVED = 0, // No wallet
     WAITING = 1, // Connected wallet and approval process started and waiting to be approved
@@ -187,7 +202,7 @@ const WalletScreen = () => {
               <FaRegCheckCircle className="text-lg" />
               Approved
             </span>
-          ) : ONBOARDING_OPEN ? (
+          ) : ONBOARDING_OPEN || walletAddress === import.meta.env.VITE_ONBOARDING_TEST_ADDRESS ? (
             <div className="bg-gray-700 p-4 rounded-lg shadow-lg mt-4">
               <h2 className="text-white text-sm font-semibold mb-2">Onboarding Required</h2>
               <OnBoardingMint
@@ -239,7 +254,7 @@ const WalletScreen = () => {
         <>
           <NFTList nfts={nfts} setNFTs={setNFTs} setNftsLoading={setNftsLoading} />
 
-          {!nftsLoading && nfts.length === 1 && ( // hardcoded to 1 because only those who where at bankers bar have claimed their membership NFT
+          {!nftsLoading && ALLOWED_ADDRESSES_CLAIM.includes(walletAddress?.toLowerCase() ?? "") && (
             <div className="mt-6">
               <ClaimNFT address={walletAddress ?? ""} onClaimSuccess={() => {
                 RPC.getNFTs(provider!).then(setNFTs);
