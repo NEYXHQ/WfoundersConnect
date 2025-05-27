@@ -29,7 +29,7 @@ const WalletScreen = () => {
   const [nftsLoading, setNftsLoading] = useState(true);
 
   const ALLOWED_ADDRESSES_CLAIM = [
-    // "0xe6005AF5C11d13e6c8DA19672AEBB7f043f63F3B", // Steph Phone #10
+    "0xe6005AF5C11d13e6c8DA19672AEBB7f043f63F3B", // Steph Phone #10
     "0xffdd175FF06b54D0C845059C63f7124BD603755f",
     "0x637246DBFc706caD0E8A59838Dc1dc3A39f618Ef",
     "0x7338B7Ecf49514270f4A3f05D4696947Ee4F730A",
@@ -254,7 +254,7 @@ const WalletScreen = () => {
         <>
           <NFTList nfts={nfts} setNFTs={setNFTs} setNftsLoading={setNftsLoading} />
 
-          {!nftsLoading && ALLOWED_ADDRESSES_CLAIM.includes(walletAddress?.toLowerCase() ?? "") && (
+          {!nftsLoading && nfts.length === 1 && ALLOWED_ADDRESSES_CLAIM.includes(walletAddress?.toLowerCase() ?? "") && (
             <div className="mt-6">
               <ClaimNFT address={walletAddress ?? ""} onClaimSuccess={() => {
                 RPC.getNFTs(provider!).then(setNFTs);
